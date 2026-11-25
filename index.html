@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1C110B">
+<title>Yangi kofexona · Новая кофейня</title>
+<meta name="description" content="Yangi kofexonaga nom tanla — 1 daqiqa. Помоги выбрать имя новой кофейне — 1 минута.">
+<link rel="preload" as="image" href="img/hero.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F0E6; --card:#FFFDF9; --ink:#24160F; --ink-2:#5A4636; --muted:#8C7A6A;
+    --line:#E8DCCB; --line-2:#D9C9B3; --dark:#1C110B; --cream:#F5E9D8;
+    --acc:#B8662B; --acc-soft:color-mix(in srgb,var(--acc) 9%,#fff);
+    --r-lg:24px; --r:18px; --r-sm:12px;
+    --head:'Unbounded','Onest',system-ui,sans-serif; --txt:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--txt);font-size:16px;line-height:1.4;transition:background-color .5s var(--ease);min-height:100dvh}
+  body.dark{background:var(--dark);color:var(--cream)}
+  /* лёгкий узор из зёрен — статичный, ничего не пересчитывает */
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:1;
+    background:
+      radial-gradient(420px 320px at 100% 0%,rgba(233,162,91,.22),transparent 70%),
+      radial-gradient(380px 300px at 0% 100%,rgba(184,102,43,.12),transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' fill='none' stroke='%2324160F' stroke-opacity='.045' stroke-width='2'%3E%3Cg transform='rotate(35 30 30)'%3E%3Cellipse cx='30' cy='30' rx='11' ry='17'/%3E%3Cpath d='M30 14c-5 9 5 17 0 32'/%3E%3C/g%3E%3Cg transform='rotate(-20 90 88)'%3E%3Cellipse cx='90' cy='88' rx='11' ry='17'/%3E%3Cpath d='M90 72c-5 9 5 17 0 32'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  body.dark::before{background:none}
+  [hidden]{display:none!important}
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  .wrap{position:relative;z-index:1;max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top)) 20px 0}
+  main{flex:1;display:flex;flex-direction:column}
+
+  /* ---------- шапка / прогресс ---------- */
+  .top{display:flex;align-items:center;gap:12px;height:44px;margin-bottom:14px}
+  .icon-btn{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);display:grid;place-items:center;flex:none;transition:transform .15s}
+  .icon-btn:active{transform:scale(.92)}
+  .bar{flex:1;height:8px;border-radius:8px;background:var(--line);overflow:hidden}
+  .bar i{display:block;height:100%;width:100%;border-radius:8px;background:linear-gradient(90deg,var(--acc),color-mix(in srgb,var(--acc) 55%,#fff));transform-origin:left;transform:scaleX(0);transition:transform .6s var(--ease),background .4s}
+  .count{min-width:34px;text-align:right;font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* ---------- экран и анимации появления ---------- */
+  .screen{flex:1;display:flex;flex-direction:column;animation:scr .45s var(--ease) both}
+  @keyframes scr{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+  body.rev .screen{animation-name:scrb}
+  @keyframes scrb{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .screen > :not(.opts):not(.grid2):not(.footer):not(h1):not(h2){animation:rise .55s var(--ease) both}
+  .screen > :nth-child(2){animation-delay:.06s}.screen > :nth-child(3){animation-delay:.12s}.screen > :nth-child(4){animation-delay:.18s}
+  .screen > :nth-child(5){animation-delay:.24s}.screen > :nth-child(6){animation-delay:.3s}.screen > :nth-child(n+7){animation-delay:.36s}
+  .opts > *,.grid2 > *{animation:rise .5s var(--ease) both}
+  .opts > :nth-child(1),.grid2 > :nth-child(1){animation-delay:.12s}.opts > :nth-child(2),.grid2 > :nth-child(2){animation-delay:.18s}
+  .opts > :nth-child(3),.grid2 > :nth-child(3){animation-delay:.24s}.opts > :nth-child(4),.grid2 > :nth-child(4){animation-delay:.3s}
+  .opts > :nth-child(5){animation-delay:.36s}.opts > :nth-child(n+6){animation-delay:.42s}
+  .footer{animation:fadein .5s .3s both}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+
+  /* заголовки: слова выезжают из-под маски */
+  h1,h2{font-family:var(--head);font-weight:600;letter-spacing:-.02em;margin:6px 0 8px}
+  h2{font-size:24px;line-height:1.22}
+  .wm{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.14em;margin-bottom:-.14em}
+  .w{display:inline-block;transform:translateY(110%);animation:wup .7s var(--ease) both;animation-delay:calc(.08s + var(--i)*.07s)}
+  @keyframes wup{to{transform:none}}
+  .sub{color:var(--ink-2);margin:0 0 18px;font-size:15px}
+  .q-gap{height:14px}
+
+  /* ---------- варианты ответа ---------- */
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{position:relative;display:flex;align-items:center;gap:14px;width:100%;min-height:62px;padding:12px 16px;text-align:left;font-size:17px;font-weight:600;
+    background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);transition:border-color .2s,background-color .2s,transform .15s,box-shadow .2s;box-shadow:0 1px 0 rgba(36,22,15,.03)}
+  .opt:active{transform:scale(.985)}
+  .opt .txt{flex:1}
+  .opt[aria-checked="true"]{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 6px 18px -8px color-mix(in srgb,var(--acc) 60%,transparent)}
+  .radio{width:24px;height:24px;border-radius:50%;border:2px solid var(--line-2);display:grid;place-items:center;flex:none;transition:background-color .2s,border-color .2s}
+  .radio svg{transform:scale(0);transition:transform .3s cubic-bezier(.3,1.7,.5,1)}
+  [aria-checked="true"] > .radio,[aria-checked="true"] .row > .radio,.photo [aria-checked="true"] .radio{background:var(--acc);border-color:var(--acc)}
+  [aria-checked="true"] > .radio svg,[aria-checked="true"] .row > .radio svg{transform:scale(1)}
+  .ic{width:42px;height:42px;border-radius:13px;background:var(--acc-soft);color:var(--acc);display:grid;place-items:center;flex:none;transition:background-color .2s,color .2s}
+  .opt[aria-checked="true"] .ic{background:var(--acc);color:#fff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .opt.tile{flex-direction:column;justify-content:center;align-items:flex-start;min-height:104px;font-family:var(--head);font-size:22px;font-weight:600;letter-spacing:-.02em}
+  .opt.tile .radio{position:absolute;top:12px;right:12px;width:22px;height:22px}
+  .opt.tile small{font-family:var(--txt);font-weight:500;font-size:13px;color:var(--muted);margin-top:4px}
+  .opt.name{min-height:84px;font-family:var(--head);font-size:26px;font-weight:600;letter-spacing:-.03em}
+  .opt.own{min-height:54px;font-size:15px;color:var(--ink-2);background:transparent;border-style:dashed;font-weight:500}
+  .own-field{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+  .own-field > *{overflow:hidden;min-height:0}
+  .own-field.show{grid-template-rows:1fr}
+  .own-field.show > *{margin-top:10px}
+
+  .input{width:100%;font:inherit;font-size:17px;padding:15px 16px;border-radius:var(--r);border:1.5px solid var(--line);background:var(--card);color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s}
+  textarea.input{min-height:84px;resize:none}
+  .input:focus{border-color:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 16%,transparent)}
+  label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:16px 0 7px}
+
+  /* ---------- ползунки ---------- */
+  .slider-card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-lg);padding:22px 18px 16px;box-shadow:0 10px 30px -18px rgba(36,22,15,.35);--v:0;--lv:.1}
+  .vis{height:150px;display:grid;place-items:center;color:var(--ink)}
+  .vis .cup2{height:150px;width:auto;overflow:visible}
+  .val{font-family:var(--head);font-weight:600;font-size:22px;letter-spacing:-.02em;text-align:center;min-height:32px;margin:6px 0 8px;color:var(--ink)}
+  .val.bump{animation:bump .35s var(--ease)}
+  @keyframes bump{0%{transform:scale(.92);opacity:.5}100%{transform:none;opacity:1}}
+  .rngwrap{position:relative;padding:0 2px}
+  .rng{-webkit-appearance:none;appearance:none;display:block;width:100%;height:44px;margin:0;background:transparent;touch-action:pan-y;outline:none;position:relative;z-index:1}
+  .rng::-webkit-slider-runnable-track{height:10px;border-radius:10px;background:linear-gradient(90deg,var(--acc) var(--p,0%),var(--line) var(--p,0%))}
+  .rng::-moz-range-track{height:10px;border-radius:10px;background:var(--line)}
+  .rng::-moz-range-progress{height:10px;border-radius:10px;background:var(--acc)}
+  .rng::-webkit-slider-thumb{-webkit-appearance:none;width:34px;height:34px;border-radius:50%;background:#fff;border:4px solid var(--acc);margin-top:-12px;box-shadow:0 4px 12px rgba(36,22,15,.25)}
+  .rng::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--acc);box-shadow:0 4px 12px rgba(36,22,15,.25)}
+  .rng.untouched::-webkit-slider-thumb{animation:ring 1.8s ease-out infinite}
+  @keyframes ring{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 45%,transparent),0 4px 12px rgba(36,22,15,.25)}100%{box-shadow:0 0 0 16px transparent,0 4px 12px rgba(36,22,15,.25)}}
+  .ticks{position:absolute;left:17px;right:17px;top:17px;display:flex;justify-content:space-between;pointer-events:none}
+  .ticks i{width:6px;height:6px;border-radius:50%;background:#fff;opacity:.75;margin:2px -3px 0}
+  .ends{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--muted);font-weight:500;padding:0 2px}
+  .cups4{display:flex;gap:14px;align-items:flex-end}
+  .cups4 i{display:block;width:46px;color:var(--line-2);transition:color .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+  .cups4 i.on{color:var(--acc);transform:translateY(-6px) scale(1.08)}
+  .liq{transform:translateY(calc((1 - var(--lv,1)) * 112px));transition:transform .6s cubic-bezier(.3,1.25,.5,1)}
+
+  /* ---------- палитры ---------- */
+  .stage{position:relative;border-radius:var(--r-lg);overflow:hidden;background:var(--line);box-shadow:0 14px 34px -18px rgba(36,22,15,.5);aspect-ratio:1100/733}
+  .imgs{display:grid;height:100%}
+  .imgs img{grid-area:1/1;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.03);transition:opacity .45s var(--ease),transform .6s var(--ease)}
+  .imgs img.on{opacity:1;transform:none}
+  .zoom{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.9);display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+  .sw{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .pill{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px;background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;font-weight:600;transition:border-color .2s,background-color .2s,transform .2s,box-shadow .2s}
+  .pill:active{transform:scale(.97)}
+  .pill .dots{display:flex}
+  .pill .dots span{width:22px;height:22px;border-radius:50%;border:2px solid var(--card);margin-left:-6px;box-shadow:0 0 0 1px rgba(36,22,15,.12)}
+  .pill .dots span:first-child{margin-left:0}
+  .pill[aria-checked="true"]{border-color:var(--acc);background:var(--acc-soft);transform:translateY(-3px);box-shadow:0 10px 20px -10px color-mix(in srgb,var(--acc) 70%,transparent)}
+  .cups{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .cupcard{flex-direction:column;align-items:stretch;padding:8px 8px 12px;min-height:0;gap:8px;text-align:center}
+  .cupcard .art{border-radius:12px;padding:10px 4px;display:grid;place-items:center;position:relative}
+  .cupcard .art svg{width:100%;height:auto;max-height:150px}
+  .cupcard .lbl{font-size:14px;font-weight:600}
+  .cupcard .radio{margin:0 auto}
+  .grid2 .cupcard .art{padding:14px 4px}
+  .mascot-art{overflow:hidden}.mascot-img{position:absolute;inset:auto 0 0 0;margin:auto;height:62%;object-fit:contain}
+  .link{display:block;margin:16px auto 0;background:none;border:0;color:var(--ink-2);font-size:14px;font-weight:500;text-decoration:underline;text-underline-offset:3px;padding:8px}
+
+  /* ---------- кнопка ---------- */
+  .footer{position:sticky;bottom:0;margin:auto -20px 0;padding:26px 20px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to bottom,rgba(247,240,230,0),var(--bg) 38%);z-index:3}
+  .hint{text-align:center;font-size:13px;color:var(--muted);margin:0 0 9px;transition:opacity .3s,transform .3s;height:18px}
+  .footer.ok .hint{opacity:0;transform:translateY(4px)}
+  .btn{position:relative;overflow:hidden;width:100%;height:58px;border:0;border-radius:var(--r);font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 70%,#000));box-shadow:0 12px 24px -12px color-mix(in srgb,var(--acc) 90%,transparent);transition:transform .15s,opacity .3s,filter .3s,box-shadow .3s}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{filter:grayscale(.85) brightness(1.15);opacity:.5;box-shadow:none;cursor:default}
+  .btn::after{content:"";position:absolute;top:0;bottom:0;left:0;width:60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-120%) skewX(-18deg);animation:sheen 3.8s 1s ease-in-out infinite}
+  .btn:disabled::after{animation:none;opacity:0}
+  @keyframes sheen{0%,55%{transform:translateX(-120%) skewX(-18deg)}100%{transform:translateX(260%) skewX(-18deg)}}
+
+  /* ---------- вступление ---------- */
+  .herobg{position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity .7s var(--ease);background:var(--dark)}
+  body.dark .herobg{opacity:1}
+  .herobg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 22%;transform:scale(1.06);transition:transform 7s ease-out}
+  body.dark .herobg img{transform:none}
+  .herobg::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(28,17,11,.5) 0%,rgba(28,17,11,0) 18%,rgba(28,17,11,0) 40%,rgba(28,17,11,.82) 62%,#1C110B 86%)}
+  .wrap.intro{height:100dvh;min-height:0;overflow:hidden}
+  .wrap.intro main,.wrap.intro .screen{min-height:0}
+  .hero{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;text-align:center;width:100%}
+  .hero .sp{flex:0 1 40dvh;min-height:60px}
+  .hero-cup{position:relative;width:170px;margin:0 auto 18px;color:var(--cream)}
+  .hero-cup .cup2{width:100%;height:auto;overflow:visible;animation:floaty 5s ease-in-out infinite}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .hero h1{font-size:30px;text-shadow:0 2px 18px rgba(28,17,11,.6);line-height:1.16;margin:0 0 10px;color:#fff}
+  .hero .ru{font-size:16px;color:rgba(245,233,216,.85);margin:0 0 14px}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:0}
+  .pillx{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:99px;background:rgba(28,17,11,.55);border:1px solid rgba(245,233,216,.18);font-size:12.5px;font-weight:500;color:var(--cream)}
+  .lang-title{width:100%;text-align:center;font-size:13px;color:rgba(245,233,216,.7);margin:auto 0 10px;padding-top:12px}
+  .lang-btns{width:100%;display:flex;flex-direction:column;gap:10px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .lang{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;height:56px;flex:none;padding:0 20px;border-radius:var(--r);font-size:17px;font-weight:700;border:1.5px solid rgba(245,233,216,.32);background:rgba(28,17,11,.5);color:var(--cream);transition:transform .15s,background-color .2s,border-color .2s}
+  .lang:hover,.lang:active{background:rgba(217,134,60,.32);border-color:rgba(233,162,91,.8)}
+  .lang:active{transform:scale(.98)}
+  .lang small{font-size:13px;font-weight:600;opacity:.8}
+
+  /* пар над чашкой */
+  .steam path{fill:none;stroke:currentColor;stroke-width:3.5;stroke-linecap:round;opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:steam 3.6s ease-in-out infinite}
+  .steam path:nth-child(2){animation-delay:1.1s}.steam path:nth-child(3){animation-delay:2.2s}
+  @keyframes steam{0%{opacity:0;transform:translateY(8px) scaleY(.7)}30%{opacity:.55}100%{opacity:0;transform:translateY(-14px) scaleY(1.1)}}
+  .cup2 .glow-ring{opacity:.0}
+
+  /* ---------- фото-полоса над вопросом ---------- */
+  .ph{height:118px;border-radius:20px;overflow:hidden;margin:0 0 14px;background:var(--line);box-shadow:0 10px 24px -16px rgba(36,22,15,.6)}
+  .ph img{display:block;width:100%;height:100%;object-fit:cover;animation:kb 9s ease-out both}
+  @keyframes kb{from{transform:scale(1.1)}to{transform:scale(1)}}
+
+  /* ---------- подарок / контакт ---------- */
+  .gift{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--r-lg);background:linear-gradient(135deg,#2A1A10,#4A2B17);color:var(--cream);margin-bottom:6px;box-shadow:0 14px 30px -16px rgba(36,22,15,.7)}
+  .gift .gi{width:62px;height:62px;flex:none;border-radius:16px;object-fit:cover;box-shadow:0 0 0 2px rgba(245,233,216,.25)}
+  .gift b{display:block;font-family:var(--head);font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .gift span{font-size:13px;opacity:.78}
+  .check{display:flex;gap:11px;align-items:flex-start;margin:16px 0 4px;font-size:13px;color:var(--ink-2);line-height:1.4}
+  .check input{appearance:none;-webkit-appearance:none;flex:none;width:22px;height:22px;border-radius:7px;border:2px solid var(--line-2);background:var(--card);display:grid;place-items:center;margin:0;transition:background-color .2s,border-color .2s}
+  .check input:checked{background:var(--acc);border-color:var(--acc)}
+  .check input::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);margin-top:-2px;transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+  .check input:checked::after{transform:rotate(45deg) scale(1)}
+  .check a{color:var(--ink)}
+  .err{color:#C0392B;font-size:14px;min-height:20px;margin:6px 0 0}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+  /* ---------- финал ---------- */
+  .done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-bottom:8vh}
+  .done .arch{width:200px;aspect-ratio:4/5;border-radius:100px 100px 26px 26px;overflow:hidden;margin-bottom:22px;box-shadow:0 22px 40px -22px rgba(36,22,15,.7);animation:rise .7s var(--ease) both}
+  .done .arch img{display:block;width:100%;height:100%;object-fit:cover;animation:kb 9s ease-out both}
+  .done h2{font-size:30px;margin:0 0 10px}
+  .done p{color:var(--ink-2);font-size:16px;line-height:1.5;max-width:320px;margin:0}
+
+  /* ---------- лайтбокс ---------- */
+  .lb{position:fixed;inset:0;background:rgba(20,13,9,.94);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+  .lb.show{display:flex;animation:fadein .2s}
+  .lb img{max-width:100%;max-height:86vh;border-radius:12px}
+  .lb button{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;display:grid;place-items:center}
+  .demo{background:#FFF3C4;border-radius:10px;padding:8px 12px;font-size:12px;margin-bottom:8px;color:#5c4a00}
+
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}.w{transform:none}}
+  @media (max-height:700px){.hero h1{font-size:26px}.hero .ru{margin-bottom:10px}.vis,.vis .cup2{height:120px}.ph{height:90px}}
+</style>
+</head>
+<body>
+<div class="herobg" aria-hidden="true"><img src="img/hero.webp" alt=""></div>
+<div class="wrap">
+  <div id="demo" class="demo" hidden>Демо-режим: ENDPOINT не задан — ответы пишутся только в консоль браузера.</div>
+  <div class="top" id="top" hidden>
+    <button class="icon-btn" id="back" aria-label="Orqaga / Назад">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="bar"></i></div>
+    <div class="count" id="count"></div>
+  </div>
+  <main id="app" aria-live="polite"></main>
+</div>
+<div class="lb" id="lb" role="dialog" aria-modal="true">
+  <button id="lbClose" aria-label="Yopish / Закрыть"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <img id="lbImg" alt="">
+</div>
+
+<script>
+/* =====================================================================
+   НАСТРОЙКИ — меняются только здесь
+   ===================================================================== */
+const CONFIG = {
+  ENDPOINT: "https://script.google.com/macros/s/AKfycbwT_oX4rVLkLaosoJta7sVoqE9M8eVA-Lz90WSlyoRy1bnQphO8vp5Ev2ryL7gi_KXuXw/exec",        // URL веб-приложения Apps Script (…/exec). Пусто = демо-режим.
+  META_PIXEL_ID: "",     // ID пикселя Meta (только цифры). Пусто = пиксель не грузится.
+  PRIVACY_URL: "#",      // ссылка на политику обработки данных
+
+  // Названия и фото-мокапы для каждой палитры (файлы лежат в папке img/).
+  // mascot: картинка маскота (PNG с прозрачным фоном). Пусто = вопрос про маскота не показывается.
+  NAMES: [
+    { id:"hopin",  name:"Hopin",  mascot:"", images:{ orange:"img/hopin-orange.webp",  green:"img/hopin-green.webp",  burgundy:"img/hopin-burgundy.webp" } },
+    { id:"lovin",  name:"Lovin",  mascot:"", images:{ orange:"img/lovin-orange.webp",  green:"img/lovin-green.webp",  burgundy:"img/lovin-burgundy.webp" } },
+    { id:"grabit", name:"Grabit", mascot:"", images:{ orange:"img/grabit-orange.webp", green:"img/grabit-green.webp", burgundy:"img/grabit-burgundy.webp" } }
+  ],
+
+  // Палитры. Цвета — для точек-превью и для стакана, если человек вписал своё название.
+  PALETTES: [
+    { id:"orange",   ru:"Оранжевая", uz:"To'q sariq", cup:"#F2541B", accent:"#BFE0F6", logo:"#FFF6EC", bg:"#F6EEE2", dots:["#F2541B","#BFE0F6","#0C3B34"] },
+    { id:"burgundy", ru:"Бордовая",  uz:"Bordo",      cup:"#4A1A2A", accent:"#F7D04B", logo:"#FFF6EC", bg:"#F6EEE2", dots:["#4A1A2A","#F7D04B","#F6EEE2"] },
+    { id:"green",    ru:"Зелёная",   uz:"Yashil",     cup:"#0B4E43", accent:"#D8EE3A", logo:"#FFF6EC", bg:"#F6EEE2", dots:["#0B4E43","#D8EE3A","#F6EEE2"] }
+  ],
+
+  // Где берут кофе: конкуренты. Последние два пункта лучше оставить.
+  WHERE: [
+    {ru:"Qahva",             uz:"Qahva"},
+    {ru:"B&B",               uz:"B&B"},
+    {ru:"Safia",             uz:"Safia"},
+    {ru:"Caffelito",         uz:"Caffelito"},
+    {ru:"Bon",               uz:"Bon"},
+    {ru:"Кофе с собой у дома / в киоске", uz:"Uy yonidagi kiosk / olib ketish nuqtasi"},
+    {ru:"Другое",            uz:"Boshqa"}
+  ]
+};
+
+/* =====================================================================
+   ТЕКСТЫ
+   ===================================================================== */
+const T = {
+  ru:{
+    of:"/", next:"Дальше",
+    q:{
+      age:"Сколько тебе лет?",
+      occ:"Чем занимаешься?",
+      freq:"Как часто берёшь кофе вне дома?",
+      where:"Где берёшь кофе чаще всего?",
+      price:"Сколько готов платить за капучино 0,3 л?",
+      order:"Как тебе удобнее заказывать?",
+      name:"Какое название тебе больше нравится?",
+      palette:"Какой цвет больше подходит {NAME}?",
+      mascot:"Какой стакан тебе больше нравится?"
+    },
+    sub:{
+      name:"Выбери одно — или предложи своё.",
+      palette:"Выбери цвет или впиши свой. Фото можно открыть на весь экран.",
+      paletteOwn:"Вот как {NAME} может выглядеть в наших цветах."
+    },
+    a:{
+      age:["до 18","18–22","23–30","30+"],
+      occ:["Учусь","Работаю","Учусь и работаю","Другое"],
+      freq:["Реже","Раз в неделю","2–4 раза в неделю","Каждый день"],
+      price:["до 20 000 сум","20 000–30 000 сум","30 000–40 000 сум","40 000+ сум"],
+      order:["У бариста","Через киоск самообслуживания","В приложении заранее — и забрать","Доставка"],
+      mascot:["С персонажем","Без персонажа"]
+    },
+    hintSlide:"Подвинь ползунок", hintPick:"Выбери цвет",
+    ownName:"Свой вариант", ownNamePh:"Напиши название",
+    ownColors:"Ничего не нравится — свои цвета", ownColorsPh:"Например: чёрный и неоново-зелёный",
+    mascotSame:"Без разницы",
+    contactTitle:"Последний шаг",
+    contactSub:"Оставь номер — напишем, когда откроемся.",
+    giftT:"Кофе в подарок", giftS:"на открытии — за участие в опросе",
+    nameLbl:"Имя", phoneLbl:"Телефон",
+    consent:'Согласен(на) получить сообщение об открытии и на <a href="{URL}" target="_blank" rel="noopener">обработку моих данных</a>',
+    submit:"Забрать кофе", sending:"Отправляем…", skip:"Без подарка, спасибо",
+    errPhone:"Проверь номер: нужно 9 цифр после +998", errConsent:"Поставь галочку согласия", errNet:"Не получилось отправить. Проверь интернет и нажми ещё раз.",
+    doneTitle:"Спасибо!", doneLead:"Ты только что помог(ла) выбрать имя новой кофейне. Напишем, когда откроемся — кофе за нами.",
+    doneLeadSkip:"Ты только что помог(ла) выбрать имя новой кофейне."
+  },
+  uz:{
+    of:"/", next:"Keyingi",
+    q:{
+      age:"Yoshing nechada?",
+      occ:"Nima bilan shug'ullanasan?",
+      freq:"Uydan tashqarida qanchalik tez-tez kofe sotib olasan?",
+      where:"Kofeni ko'pincha qayerdan olasan?",
+      price:"0,3 l kapuchino uchun qancha to'lashga tayyorsan?",
+      order:"Qanday buyurtma berish qulayroq?",
+      name:"Qaysi nom ko'proq yoqadi?",
+      palette:"{NAME} uchun qaysi rang ko'proq mos?",
+      mascot:"Qaysi stakan ko'proq yoqadi?"
+    },
+    sub:{
+      name:"Bittasini tanla — yoki o'zingnikini taklif qil.",
+      palette:"Rangni tanla yoki o'zingnikini yoz. Rasmni kattalashtirish mumkin.",
+      paletteOwn:"{NAME} bizning ranglarimizda shunday ko'rinishi mumkin."
+    },
+    a:{
+      age:["18 gacha","18–22","23–30","30+"],
+      occ:["O'qiyman","Ishlayman","O'qiyman va ishlayman","Boshqa"],
+      freq:["Kamroq","Haftada bir marta","Haftada 2–4 marta","Har kuni"],
+      price:["20 000 so'mgacha","20 000–30 000 so'm","30 000–40 000 so'm","40 000+ so'm"],
+      order:["Baristadan","Self-servis kioskdan","Ilovada oldindan buyurtma berib, kelib olaman","Yetkazib berish"],
+      mascot:["Personaj bilan","Personajsiz"]
+    },
+    hintSlide:"Surib tanla", hintPick:"Rangni tanla",
+    ownName:"O'z variantim", ownNamePh:"Nomni yoz",
+    ownColors:"Hech biri yoqmadi — o'z ranglarim", ownColorsPh:"Masalan: qora va neon-yashil",
+    mascotSame:"Farqi yo'q",
+    contactTitle:"Oxirgi qadam",
+    contactSub:"Raqamingni qoldir — ochilganimizda yozamiz.",
+    giftT:"Sovg'a kofe", giftS:"ochilishda — so'rovnomada qatnashganing uchun",
+    nameLbl:"Ism", phoneLbl:"Telefon",
+    consent:'Ochilish haqida xabar olishga va <a href="{URL}" target="_blank" rel="noopener">shaxsiy ma\'lumotlarimni qayta ishlashga</a> roziman',
+    submit:"Sovg'a kofeni olish", sending:"Yuborilmoqda…", skip:"Sovg'asiz, rahmat",
+    errPhone:"Raqamni tekshir: +998 dan keyin 9 ta raqam kerak", errConsent:"Rozilik belgisini qo'y", errNet:"Yuborib bo'lmadi. Internetni tekshirib, qayta bos.",
+    doneTitle:"Rahmat!", doneLead:"Sen hozirgina yangi kofexonaga nom tanlashga yordam berding. Ochilganimizda yozamiz — kofe bizdan.",
+    doneLeadSkip:"Sen hozirgina yangi kofexonaga nom tanlashga yordam berding."
+  }
+};
+const RU = T.ru; // в таблицу всегда пишем по-русски
+
+/* =====================================================================
+   СОСТОЯНИЕ
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const root = document.documentElement;
+const params = new URLSearchParams(location.search);
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2,10));
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const S = {
+  id: uid(), lang: null, step: -1, started: 0, a: {},
+  nameOrder: shuffle(CONFIG.NAMES.map(n => n.id)),
+  palOrder: shuffle(CONFIG.PALETTES.map(p => p.id)),
+  mascotOrder: shuffle([0,1])
+};
+const t = () => T[S.lang || "ru"];
+const nameObj = () => CONFIG.NAMES.find(n => n.id === S.a.name);
+const pal = id => CONFIG.PALETTES.find(p => p.id === id);
+const displayName = () => S.a.name === "own" ? (S.a.ownName || "") : (nameObj() ? nameObj().name : "");
+
+function steps(){
+  const s = ["age","occ","freq","where","price","order","name","palette"];
+  const n = nameObj();
+  if (n && n.mascot && S.a.palette && S.a.palette !== "own") s.push("mascot");
+  s.push("contact");
+  return s;
+}
+
+/* =====================================================================
+   META PIXEL
+   ===================================================================== */
+const px = (...args) => { if (typeof window.fbq === "function") window.fbq(...args); };
+if (/^\d+$/.test(CONFIG.META_PIXEL_ID)) {
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', CONFIG.META_PIXEL_ID); fbq('track', 'PageView');
+}
+if (!CONFIG.ENDPOINT) $("#demo").hidden = false;
+
+/* =====================================================================
+   UI-ПРИМИТИВЫ
+   ===================================================================== */
+const CHECK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const radio = `<span class="radio" aria-hidden="true">${CHECK}</span>`;
+const ZOOM = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#24160F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
+const footer = (label, id="nextBtn", disabled=true, hint="") =>
+  `<div class="footer${disabled ? "" : " ok"}">${hint ? `<div class="hint">${esc(hint)}</div>` : ""}<button class="btn" id="${id}" ${disabled?"disabled":""}>${esc(label)}</button></div>`;
+
+/* Иконки для карточек (24px, штрихом) */
+const ic = p => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON = {
+  occ:[
+    ic('<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M7 9.5V14c0 1.5 2.5 3 5 3s5-1.5 5-3V9.5"/>'),
+    ic('<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>'),
+    ic('<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>'),
+    ic('<circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/>')
+  ],
+  order:[
+    ic('<path d="M5 8h12v5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5V8z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17M8 3c0 1.5 1.5 1.5 1.5 3M12 3c0 1.5 1.5 1.5 1.5 3"/>'),
+    ic('<rect x="4" y="3" width="16" height="14" rx="2.5"/><path d="M8 21h8M12 17v4"/>'),
+    ic('<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>'),
+    ic('<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 11V6.5a3 3 0 0 1 6 0V11"/>')
+  ]
+};
+
+/* Чашка с жидкостью (для ползунка цены, финала и вступления) */
+let cupN = 0;
+function cup({steam=false, lv=null}={}){
+  const id = "cp" + (++cupN);
+  return `<svg class="cup2" viewBox="0 0 130 150" aria-hidden="true" ${lv === null ? "" : `style="--lv:${lv}"`}>
+    <defs><clipPath id="${id}"><path d="M18 32H96L88 128Q87 140 76 140H38Q27 140 26 128Z"/></clipPath>
+      <linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98A52"/><stop offset=".12" stop-color="#7A4423"/><stop offset="1" stop-color="#3B1F10"/></linearGradient></defs>
+    ${steam ? `<g class="steam"><path d="M42 26c-6-6 6-10 0-18"/><path d="M58 26c-6-6 6-10 0-18"/><path d="M74 26c-6-6 6-10 0-18"/></g>` : ""}
+    <path d="M18 32H96L88 128Q87 140 76 140H38Q27 140 26 128Z" fill="currentColor" fill-opacity=".08"/>
+    <g clip-path="url(#${id})"><g class="liq"><rect x="10" y="32" width="110" height="120" fill="url(#${id}g)"/><rect x="10" y="32" width="110" height="7" fill="#E7B987" opacity=".85"/></g></g>
+    <path d="M18 32H96L88 128Q87 140 76 140H38Q27 140 26 128Z" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M95 48h6a13 13 0 0 1 0 26h-9" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M14 147h86" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" opacity=".5"/>
+  </svg>`;
+}
+const miniCup = `<svg viewBox="0 0 48 52" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14h28v14a13 13 0 0 1-13 13h-2A13 13 0 0 1 7 28V14z" fill="currentColor" fill-opacity=".14"/><path d="M35 18h3a6 6 0 0 1 0 12h-3M14 5c0 3 3 3 3 6M23 5c0 3 3 3 3 6"/></svg>`;
+
+const giftSvg = `<img class="gi" src="img/gift.webp" alt="">`;
+const BANNER = {age:"ph-beans", occ:"ph-counter", where:"ph-takeaway", order:"ph-pour"};
+
+function cupSVG(name, p){
+  const n = name || "•";
+  const fs = Math.max(7, Math.min(17, 72 / (Math.max(3, n.length) * 0.64)));
+  const fit = n.length * fs * 0.64 > 72 ? ` textLength="72" lengthAdjust="spacingAndGlyphs"` : "";
+  const cid = "c" + Math.random().toString(36).slice(2,7);
+  return `<svg viewBox="0 0 120 170" aria-hidden="true">
+    <defs><clipPath id="${cid}"><path d="M16 26 H104 L95 160 Q94 165 89 165 H31 Q26 165 25 160 Z"/></clipPath></defs>
+    <rect x="14" y="8" width="92" height="12" rx="6" fill="#FFF8EF"/>
+    <rect x="10" y="18" width="100" height="9" rx="4.5" fill="#EFE5D6"/>
+    <g clip-path="url(#${cid})">
+      <rect x="0" y="20" width="120" height="150" fill="${p.cup}"/>
+      <polygon points="0,152 120,126 120,170 0,170" fill="${p.accent}"/>
+    </g>
+    <text x="60" y="${86}" text-anchor="middle" font-family="Onest,Arial,sans-serif" font-weight="800" font-size="${fs}"${fit} fill="${p.logo}">${esc(n)}</text>
+    <text x="60" y="${86 + Math.max(9, fs*0.8)}" text-anchor="middle" font-family="Onest,Arial,sans-serif" font-weight="700" font-size="${Math.max(5, fs*0.42)}" letter-spacing="1.6" fill="${p.logo}">COFFEE</text>
+  </svg>`;
+}
+
+/* Заголовки: слова выезжают из-под маски */
+function splitWords(el){
+  const txt = el.textContent.trim();
+  el.setAttribute("aria-label", txt);
+  el.innerHTML = txt.split(/\s+/).map((w,i) => `<span class="wm" aria-hidden="true"><span class="w" style="--i:${i}">${esc(w)}</span></span>`).join(" ");
+}
+
+/* Акцентный цвет страницы = выбранная палитра (после шага с палитрой) */
+function applyAccent(){
+  const p = pal(S.a.palette);
+  if (S.step >= 0 && p && S.a.palette !== "own") root.style.setProperty("--acc", p.cup);
+  else root.style.removeProperty("--acc");
+}
+const tick = () => { try{ navigator.vibrate && navigator.vibrate(8); }catch(e){} };
+
+/* =====================================================================
+   ЭКРАНЫ
+   ===================================================================== */
+function render(){
+  const st = steps();
+  const inQuiz = S.step >= 0 && S.step < st.length;
+  $("#top").hidden = !inQuiz;
+  if (inQuiz){
+    const qn = st.length - 1; // без контакта
+    $("#count").textContent = S.step < qn ? `${S.step+1} ${t().of} ${qn}` : "";
+    $("#bar").style.transform = `scaleX(${Math.max(.04, S.step / st.length)})`;
+  }
+  document.documentElement.lang = S.lang || "uz";
+  document.body.classList.toggle("dark", S.step < 0);
+  document.querySelector(".wrap").classList.toggle("intro", S.step < 0);
+  $('meta[name="theme-color"]').content = S.step < 0 ? "#1C110B" : "#F7F0E6";
+  applyAccent();
+  const key = S.step < 0 ? "intro" : (S.step >= st.length ? "done" : st[S.step]);
+  const views = {
+    intro: viewIntro, done: viewDone, contact: viewContact, name: viewName,
+    palette: viewPalette, mascot: viewMascot,
+    age:   () => viewList("age",   t().a.age, "tile"),
+    occ:   () => viewList("occ",   t().a.occ, "icon"),
+    freq:  () => viewSlider("freq"),
+    where: () => viewList("where", CONFIG.WHERE.map(w => w[S.lang]), "plain"),
+    price: () => viewSlider("price"),
+    order: () => viewList("order", t().a.order, "icon")
+  };
+  app.innerHTML = `<section class="screen">${views[key]()}</section>`;
+  app.querySelectorAll("h1,h2").forEach(splitWords);
+  (bind[key] || (() => bindList(key)))();
+}
+
+function viewIntro(){
+  return `
+  <div class="hero">
+    <div class="sp"></div>
+    <h1>Yangi kofexonaga nom tanla</h1>
+    <p class="ru">Выбери имя для новой кофейни</p>
+    <div class="meta">
+      <span class="pillx">⏱ 1 daqiqa · 1 минута</span>
+      <span class="pillx">☕ Kofe sovg'a · Кофе в подарок</span>
+    </div>
+    <div class="lang-title">Tilni tanla · Выбери язык</div>
+    <div class="lang-btns">
+      <button class="lang primary" data-l="uz">O'zbekcha <small>Boshlash →</small></button>
+      <button class="lang" data-l="ru">Русский <small>Начать →</small></button>
+    </div>
+  </div>`;
+}
+
+function viewList(key, labels, mode){
+  const item = (l,i) => {
+    const on = S.a[key] === i;
+    if (mode === "tile") return `<button class="opt tile" role="radio" data-i="${i}" aria-checked="${on}"><span>${esc(l)}</span>${radio}</button>`;
+    if (mode === "icon") return `<button class="opt" role="radio" data-i="${i}" aria-checked="${on}"><span class="ic" aria-hidden="true">${ICON[key][i]}</span><span class="txt">${esc(l)}</span>${radio}</button>`;
+    return `<button class="opt" role="radio" data-i="${i}" aria-checked="${on}"><span class="txt">${esc(l)}</span>${radio}</button>`;
+  };
+  const ban = BANNER[key] ? `<div class="ph"><img src="img/${BANNER[key]}.webp" alt=""></div>` : "";
+  return `${ban}<h2>${esc(t().q[key])}</h2><div class="q-gap"></div>
+    <div class="${mode === "tile" ? "grid2" : "opts"}" role="radiogroup">${labels.map(item).join("")}</div>`;
+}
+
+/* Ползунок: частота (чашки) и цена (стакан наполняется) */
+function viewSlider(key){
+  const L = t(), labels = L.a[key], v = S.a[key], has = v !== undefined;
+  const vis = key === "price"
+    ? cup()
+    : `<div class="cups4">${[0,1,2,3].map(i => `<i class="${has && i <= v ? "on" : ""}">${miniCup}</i>`).join("")}</div>`;
+  return `<h2>${esc(L.q[key])}</h2><div class="q-gap"></div>
+    <div class="slider-card" id="sc" style="--v:${has ? v : 0};--lv:${has ? (v+1)/4 : .1}">
+      <div class="vis">${vis}</div>
+      <div class="val" id="val">${has ? esc(labels[v]) : "&nbsp;"}</div>
+      <div class="rngwrap">
+        <input class="rng ${has ? "" : "untouched"}" id="rng" type="range" min="0" max="3" step="1" value="${has ? v : 0}" style="--p:${has ? v/3*100 : 0}%" aria-label="${esc(L.q[key])}">
+        <div class="ticks"><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="ends"><span>${esc(labels[0])}</span><span>${esc(labels[3])}</span></div>
+    </div>
+    ${footer(L.next, "nextBtn", !has, L.hintSlide)}`;
+}
+
+function viewName(){
+  const L = t();
+  const own = S.a.name === "own";
+  return `<h2>${esc(L.q.name)}</h2><p class="sub">${esc(L.sub.name)}</p>
+    <div class="opts" role="radiogroup">
+      ${S.nameOrder.map(id => { const n = CONFIG.NAMES.find(x => x.id === id);
+        return `<button class="opt name" role="radio" data-id="${id}" aria-checked="${S.a.name===id}"><span class="txt">${esc(n.name)}</span>${radio}</button>`; }).join("")}
+      <button class="opt own" role="radio" data-id="own" aria-checked="${own}"><span class="txt">✎&nbsp; ${esc(L.ownName)}</span>${radio}</button>
+    </div>
+    <div class="own-field ${own ? "show" : ""}" id="ownWrap"><div>
+      <input class="input" id="ownName" maxlength="30" placeholder="${esc(L.ownNamePh)}" value="${esc(S.a.ownName || "")}" autocomplete="off" autocapitalize="words">
+    </div></div>
+    ${footer(L.next, "nextBtn", !nameValid())}`;
+}
+const nameValid = () => S.a.name && (S.a.name !== "own" || (S.a.ownName || "").trim().length >= 2);
+
+function viewPalette(){
+  const L = t(), n = nameObj(), nm = displayName();
+  const own = S.a.palette === "own";
+  const cur = (S.a.palette && S.a.palette !== "own") ? S.a.palette : S.palOrder[0];
+  let body;
+  if (n){
+    body = `<div class="stage"><div class="imgs">${S.palOrder.map(pid => `<img class="${pid===cur?"on":""}" data-p="${pid}" src="${esc(n.images[pid])}" alt="${esc(nm)} — ${esc(pal(pid)[S.lang])}" decoding="async">`).join("")}</div>
+        <button class="zoom" id="zoomBtn" aria-label="Zoom">${ZOOM}</button></div>
+      <div class="sw" role="radiogroup">${S.palOrder.map(pid => { const p = pal(pid);
+        return `<button class="pill" role="radio" data-id="${pid}" aria-checked="${S.a.palette===pid}">
+          <span class="dots">${p.dots.map(c=>`<span style="background:${c}"></span>`).join("")}</span><span>${esc(p[S.lang])}</span></button>`; }).join("")}</div>`;
+  } else {
+    body = `<div class="cups" role="radiogroup">${S.palOrder.map(pid => { const p = pal(pid);
+      return `<button class="opt cupcard" role="radio" data-id="${pid}" aria-checked="${S.a.palette===pid}">
+        <div class="art" style="background:${p.bg}">${cupSVG(nm, p)}</div>
+        <span class="lbl">${esc(p[S.lang])}</span>${radio}</button>`; }).join("")}</div>`;
+  }
+  return `<h2>${esc(L.q.palette.replace("{NAME}", nm))}</h2>
+    <p class="sub">${esc(n ? L.sub.palette : L.sub.paletteOwn.replace("{NAME}", nm))}</p>
+    ${body}
+    <div class="q-gap"></div>
+    <div class="opts"><button class="opt own" role="radio" data-id="own" aria-checked="${own}"><span class="txt">✎&nbsp; ${esc(L.ownColors)}</span>${radio}</button></div>
+    <div class="own-field ${own ? "show" : ""}" id="ownWrap"><div>
+      <textarea class="input" id="ownColors" maxlength="120" placeholder="${esc(L.ownColorsPh)}">${esc(S.a.ownColors || "")}</textarea>
+    </div></div>
+    ${footer(L.next, "nextBtn", !paletteValid(), L.hintPick)}`;
+}
+const paletteValid = () => S.a.palette && (S.a.palette !== "own" || (S.a.ownColors || "").trim().length >= 2);
+
+function viewMascot(){
+  const L = t(), n = nameObj(), p = pal(S.a.palette);
+  return `<h2>${esc(L.q.mascot)}</h2><div class="q-gap"></div>
+    <div class="grid2" role="radiogroup">${S.mascotOrder.map(i=>`
+      <button class="opt cupcard" role="radio" data-i="${i}" aria-checked="${S.a.mascot===i}">
+        <div class="art mascot-art" style="background:${p.bg}">${cupSVG(n.name, p)}${i===0 ? `<img class="mascot-img" src="${esc(n.mascot)}" alt="">` : ""}</div>
+        <span class="lbl">${esc(L.a.mascot[i])}</span>${radio}</button>`).join("")}</div>
+    <button class="link" id="same">${esc(L.mascotSame)}</button>`;
+}
+
+function viewContact(){
+  const L = t();
+  return `<h2>${esc(L.contactTitle)}</h2><p class="sub">${esc(L.contactSub)}</p>
+    <div class="gift">${giftSvg}<div><b>${esc(L.giftT)}</b><span>${esc(L.giftS)}</span></div></div>
+    <form id="f" novalidate autocomplete="on" style="display:contents">
+      <label class="f" for="nm">${esc(L.nameLbl)}</label>
+      <input class="input" type="text" id="nm" maxlength="60" autocomplete="given-name">
+      <label class="f" for="ph">${esc(L.phoneLbl)}</label>
+      <input class="input" type="tel" id="ph" inputmode="numeric" autocomplete="tel" value="+998 " maxlength="17">
+      <div class="hp" aria-hidden="true"><input type="text" id="website" tabindex="-1" autocomplete="off"></div>
+      <label class="check"><input type="checkbox" id="ok"><span>${L.consent.replace("{URL}", esc(CONFIG.PRIVACY_URL))}</span></label>
+      <div class="err" id="err" role="alert"></div>
+      <div class="footer"><button class="btn" id="sub" type="submit">${esc(L.submit)}</button>
+        <button class="link" id="skip" type="button">${esc(L.skip)}</button></div>
+    </form>`;
+}
+
+function viewDone(){
+  const L = t();
+  return `<div class="done"><div class="arch"><img src="img/done.webp" alt=""></div>
+    <h2>${esc(L.doneTitle)}</h2><p>${esc(S.skipped ? L.doneLeadSkip : L.doneLead)}</p></div>`;
+}
+
+/* =====================================================================
+   ОБРАБОТЧИКИ
+   ===================================================================== */
+function go(i){ document.body.classList.toggle("rev", i < S.step); S.step = i; render(); window.scrollTo({top:0}); }
+const next = () => go(S.step + 1);
+function markRadio(scope, el){ scope.querySelectorAll('[role="radio"]').forEach(b => b.setAttribute("aria-checked", String(b === el))); }
+
+function bindList(key){
+  app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+    S.a[key] = +b.dataset.i; markRadio(app, b); tick();
+    setTimeout(next, 240);
+  });
+}
+
+function bindSlider(key){
+  const rng = $("#rng"), sc = $("#sc"), val = $("#val"), btn = $("#nextBtn"), labels = t().a[key];
+  const apply = (v, haptic) => {
+    const changed = S.a[key] !== v;
+    S.a[key] = v;
+    rng.classList.remove("untouched");
+    rng.style.setProperty("--p", (v/3*100) + "%");
+    sc.style.setProperty("--v", v); sc.style.setProperty("--lv", (v+1)/4);
+    sc.querySelectorAll(".cups4 i").forEach((el,i) => el.classList.toggle("on", i <= v));
+    val.textContent = labels[v];
+    if (changed){ val.classList.remove("bump"); void val.offsetWidth; val.classList.add("bump"); if (haptic) tick(); }
+    btn.disabled = false; btn.parentNode.classList.add("ok");
+  };
+  rng.addEventListener("input", () => apply(+rng.value, true));
+  // нажатие точно на начальную позицию не даёт события input — считаем это ответом
+  const touch = () => { if (S.a[key] === undefined) apply(+rng.value, false); };
+  rng.addEventListener("pointerup", touch); rng.addEventListener("keydown", touch);
+  btn.onclick = () => S.a[key] !== undefined && next();
+}
+
+const bind = {
+  intro(){
+    app.querySelectorAll(".lang").forEach(b => b.onclick = () => {
+      S.lang = b.dataset.l; S.started = Date.now();
+      px('trackCustom', 'QuizStart', {lang: S.lang});
+      go(0);
+    });
+  },
+  freq(){ bindSlider("freq"); },
+  price(){ bindSlider("price"); },
+  name(){
+    preloadImages();
+    const wrap = $("#ownWrap"), inp = $("#ownName"), btn = $("#nextBtn");
+    app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      const changed = S.a.name !== b.dataset.id;
+      S.a.name = b.dataset.id; markRadio(app, b); tick();
+      if (changed){ delete S.a.palette; delete S.a.mascot; }
+      wrap.classList.toggle("show", S.a.name === "own");
+      if (S.a.name === "own") inp.focus();
+      btn.disabled = !nameValid(); btn.parentNode.classList.toggle("ok", nameValid());
+      if (S.a.name !== "own") setTimeout(next, 240);   // готовое название — сразу дальше
+    });
+    inp.oninput = () => { S.a.ownName = inp.value.replace(/\s+/g," ").slice(0,30); btn.disabled = !nameValid(); };
+    inp.onkeydown = e => { if (e.key === "Enter" && nameValid()) next(); };
+    btn.onclick = () => nameValid() && next();
+  },
+  palette(){
+    const wrap = $("#ownWrap"), ta = $("#ownColors"), btn = $("#nextBtn");
+    const refresh = () => { btn.disabled = !paletteValid(); btn.parentNode.classList.toggle("ok", paletteValid()); };
+    const select = el => {
+      S.a.palette = el.dataset.id; markRadio(app, el); delete S.a.mascot; tick();
+      wrap.classList.toggle("show", S.a.palette === "own");
+      // фото-превью плавно меняется на выбранную палитру
+      app.querySelectorAll(".imgs img").forEach(im => im.classList.toggle("on", im.dataset.p === S.a.palette));
+      applyAccent();
+      if (S.a.palette === "own") ta.focus();
+      refresh();
+    };
+    app.querySelectorAll('[role="radio"]').forEach(el => {
+      el.onclick = () => select(el);
+    });
+    const zb = $("#zoomBtn");
+    if (zb) zb.onclick = () => { const im = app.querySelector(".imgs img.on"); if (im) openLb(im.getAttribute("src")); };
+    ta.oninput = () => { S.a.ownColors = ta.value.slice(0,120); refresh(); };
+    btn.onclick = () => { if (!paletteValid()) return; if (!steps().includes("mascot")) sendAnswers(); next(); };
+  },
+  mascot(){
+    app.querySelectorAll(".opt").forEach(b => b.onclick = () => { S.a.mascot = +b.dataset.i; markRadio(app, b); sendAnswers(); setTimeout(next, 240); });
+    $("#same").onclick = () => { S.a.mascot = 2; sendAnswers(); next(); };
+  },
+  contact(){
+    const ph = $("#ph");
+    ph.addEventListener("input", () => ph.value = formatPhone(ph.value));
+    ph.addEventListener("focus", () => { if (!ph.value.startsWith("+998")) ph.value = "+998 "; });
+    $("#f").onsubmit = submitContact;
+    $("#skip").onclick = () => { S.skipped = true; next(); };
+  },
+  done(){}
+};
+
+$("#back").onclick = () => go(S.step - 1);
+
+/* Лайтбокс */
+function openLb(src){ $("#lbImg").src = src; $("#lb").classList.add("show"); $("#lbClose").focus(); }
+function closeLb(){ $("#lb").classList.remove("show"); }
+$("#lb").onclick = closeLb;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeLb(); });
+
+let preloaded = false;
+function preloadImages(){
+  if (preloaded) return; preloaded = true;
+  CONFIG.NAMES.forEach(n => Object.values(n.images).forEach(src => { const i = new Image(); i.decoding = "async"; i.src = src; }));
+}
+
+/* =====================================================================
+   ОТПРАВКА ДАННЫХ
+   ===================================================================== */
+function formatPhone(v){
+  let d = v.replace(/\D/g, "");
+  if (d.startsWith("998")) d = d.slice(3);
+  d = d.slice(0, 9);
+  return "+998 " + [d.slice(0,2), d.slice(2,5), d.slice(5,7), d.slice(7,9)].filter(Boolean).join(" ");
+}
+
+function payload(){
+  const A = S.a, n = nameObj(), p = pal(A.palette);
+  return {
+    id: S.id, lang: S.lang,
+    age: RU.a.age[A.age], occupation: RU.a.occ[A.occ], frequency: RU.a.freq[A.freq],
+    where: CONFIG.WHERE[A.where] ? CONFIG.WHERE[A.where].ru : "",
+    price: RU.a.price[A.price], order: RU.a.order[A.order],
+    name: A.name === "own" ? RU.ownName : (n ? n.name : ""),
+    custom_name: A.name === "own" ? (A.ownName || "").trim() : "",
+    palette: A.palette === "own" ? "Свои цвета" : (p ? p.ru : ""),
+    custom_colors: A.palette === "own" ? (A.ownColors || "").trim() : "",
+    mascot: A.mascot === undefined ? "" : (A.mascot === 2 ? RU.mascotSame : RU.a.mascot[A.mascot]),
+    name_order: S.nameOrder.map(id => CONFIG.NAMES.find(x => x.id === id).name).join(" > "),
+    seconds: Math.round((Date.now() - S.started) / 1000),
+    device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "mobile" : "desktop",
+    utm_source: params.get("utm_source") || "", utm_medium: params.get("utm_medium") || "",
+    utm_campaign: params.get("utm_campaign") || "", utm_content: params.get("utm_content") || "",
+    utm_term: params.get("utm_term") || "", fbclid: params.get("fbclid") ? "yes" : ""
+  };
+}
+
+async function post(body){
+  if (!CONFIG.ENDPOINT){ console.log("[quiz demo] payload:", body); return true; }
+  for (let attempt = 0; attempt < 2; attempt++){
+    try{
+      const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 12000);
+      // text/plain — «простой» запрос без preflight, Apps Script его принимает
+      const r = await fetch(CONFIG.ENDPOINT, {method:"POST", body: JSON.stringify(body),
+        headers:{"Content-Type":"text/plain;charset=utf-8"}, signal: ctrl.signal, keepalive: true});
+      clearTimeout(to);
+      const j = await r.json().catch(() => ({}));
+      if (j.ok) return true;
+    }catch(e){ /* повторим один раз */ }
+  }
+  return false;
+}
+
+// Ответы сохраняем ДО шага с контактом — данные исследования не теряются, даже без номера.
+function sendAnswers(){
+  const body = Object.assign({action:"answers"}, payload());
+  px('trackCustom', 'QuizComplete', {name: body.name});
+  post(body);
+}
+
+async function submitContact(e){
+  e.preventDefault();
+  const L = t(), err = $("#err"), btn = $("#sub");
+  if ($("#website").value) { next(); return; } // бот
+  const digits = $("#ph").value.replace(/\D/g, "").replace(/^998/, "");
+  if (digits.length !== 9) { err.textContent = L.errPhone; $("#ph").focus(); return; }
+  if (!$("#ok").checked) { err.textContent = L.errConsent; return; }
+  err.textContent = ""; btn.disabled = true; btn.textContent = L.sending;
+  const ok = await post(Object.assign({action:"contact"}, payload(), {
+    first_name: $("#nm").value.trim().slice(0,60), phone: "+998" + digits, consent: "yes" }));
+  if (ok){ px('track', 'Lead'); next(); }
+  else { err.textContent = L.errNet; btn.disabled = false; btn.textContent = L.submit; }
+}
+
+// ?lang=uz / ?lang=ru — сразу открыть квиз на нужном языке (для отдельных кампаний)
+if (["uz","ru"].includes(params.get("lang"))) { S.lang = params.get("lang"); S.started = Date.now(); S.step = 0; }
+render();
+</script>
+</body>
+</html>
