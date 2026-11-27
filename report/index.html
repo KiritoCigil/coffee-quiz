@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Квиз кофейни — результаты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="runtime.js"></script>
+<style>
+  :root {
+    --color-fg: #1E1B2E; --color-fg-muted: #6B6680; --color-bg: #F3F1FA; --color-panel: #FFFFFF; --color-border-line: #E4E0F0;
+    --font-anthropic-sans: "Manrope", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-anthropic-serif: "Lora", "Iowan Old Style", Georgia, serif;
+    --cds-font-size-caption: 12px; --cds-font-size-body: 14px; --cds-font-size-heading: 16px; --cds-font-size-title: 28px;
+    --cds-font-weight-medium: 600;
+    --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 14px; --cds-gap-lg: 20px; --cds-gap-xl: 30px;
+    --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-md: 12px; --cds-pad-lg: 20px; --cds-pad-xl: 30px;
+    --cds-radius: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --color-fg: #F2F0FA; --color-fg-muted: #A49FB8; --color-bg: #0C0B12; --color-panel: #17151F; --color-border-line: #2A2735; color-scheme: dark; }
+  }
+  html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
+  body { font: 14px/1.45 var(--font-anthropic-sans); overflow-x: hidden; }
+  #dash-root { max-width: 1280px; margin: 0 auto; padding-block: max(24px, env(safe-area-inset-top, 0px)) 40px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  @media (min-width: 760px) { #dash-root { padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); } }
+  .dash-skeleton { color: transparent !important; background: color-mix(in srgb, var(--color-fg) 8%, transparent); border-radius: 6px; }
+  .cq-status { margin: 0 0 16px; padding: 12px 16px; border-radius: 14px; background: color-mix(in srgb, #FFD25E 25%, transparent); font-size: 13px; }
+  .dash-select { appearance: none; -webkit-appearance: none; border: 0; padding: 8px 34px 8px 16px; font: inherit; color: var(--color-fg); cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+  .dash-select:focus-visible { outline: 2px solid #6B4DFF; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div id="dash-root">
+<p class="cq-status" id="cq-status" hidden></p>
+<style>
+  /* Bento of frosted glass: one violet accent for "the winner", lime for live/positive, everything else quiet glass. */
+  .cq {
+    --v1: #A38BFF; --v2: #6B4DFF; --lime: #C6F24E; --sky: #6CCBFF; --peach: #FFB38A;
+    --glass: color-mix(in srgb, #ffffff 62%, transparent);
+    --glass-2: color-mix(in srgb, #ffffff 80%, transparent);
+    --pill: color-mix(in srgb, #ffffff 85%, transparent);
+    --pill-edge: color-mix(in srgb, #6B4DFF 10%, transparent);
+    --rim: color-mix(in srgb, #ffffff 90%, transparent);
+    --line: color-mix(in srgb, var(--color-fg) 8%, transparent);
+    --muted: color-mix(in srgb, var(--color-fg) 58%, transparent);
+    --shadow: 0 20px 50px -28px rgba(70, 50, 160, .35), 0 2px 8px -4px rgba(70, 50, 160, .12);
+    --glow-a: color-mix(in srgb, #8B6CFF 38%, transparent);
+    --glow-b: color-mix(in srgb, #C6F24E 26%, transparent);
+    --glow-c: color-mix(in srgb, #6CCBFF 26%, transparent);
+    --r: 26px;
+    position: relative; isolation: isolate;
+    display: flex; flex-direction: column; gap: var(--cds-gap-xl);
+    font-family: var(--font-anthropic-sans); color: var(--color-fg);
+    padding-block: var(--cds-pad-md);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .cq {
+      --glass: color-mix(in srgb, #ffffff 6%, transparent);
+      --glass-2: color-mix(in srgb, #ffffff 10%, transparent);
+      --pill: color-mix(in srgb, #ffffff 9%, transparent);
+      --pill-edge: color-mix(in srgb, #ffffff 10%, transparent);
+      --rim: color-mix(in srgb, #ffffff 16%, transparent);
+      --shadow: 0 20px 50px -28px rgba(0, 0, 0, .7), 0 2px 8px -4px rgba(0, 0, 0, .4);
+      --glow-a: color-mix(in srgb, #7B5CFF 34%, transparent);
+      --glow-b: color-mix(in srgb, #B8E83C 16%, transparent);
+      --glow-c: color-mix(in srgb, #3AA9E8 18%, transparent);
+    }
+  }
+  :root[data-theme="dark"] .cq {
+    --glass: color-mix(in srgb, #ffffff 6%, transparent);
+    --glass-2: color-mix(in srgb, #ffffff 10%, transparent);
+    --pill: color-mix(in srgb, #ffffff 9%, transparent);
+    --pill-edge: color-mix(in srgb, #ffffff 10%, transparent);
+    --rim: color-mix(in srgb, #ffffff 16%, transparent);
+    --shadow: 0 20px 50px -28px rgba(0, 0, 0, .7), 0 2px 8px -4px rgba(0, 0, 0, .4);
+    --glow-a: color-mix(in srgb, #7B5CFF 34%, transparent);
+    --glow-b: color-mix(in srgb, #B8E83C 16%, transparent);
+    --glow-c: color-mix(in srgb, #3AA9E8 18%, transparent);
+  }
+
+  .cq-ambient { position: absolute; inset: -60px -30px; z-index: -1; pointer-events: none; overflow: hidden;
+    background:
+      radial-gradient(40% 32% at 15% 8%, var(--glow-a), transparent 70%),
+      radial-gradient(34% 28% at 88% 22%, var(--glow-c), transparent 70%),
+      radial-gradient(38% 30% at 30% 58%, var(--glow-b), transparent 70%),
+      radial-gradient(42% 30% at 85% 75%, var(--glow-a), transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 50%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 50%, transparent 100%);
+  }
+
+  .cq-bento { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--cds-gap-md); }
+  .cq-bento.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .span-2 { grid-column: span 2; }
+  .span-all { grid-column: 1 / -1; }
+  @media (max-width: 980px) { .cq-bento.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px) { .cq-bento, .cq-bento.four { grid-template-columns: minmax(0, 1fr); } .span-2 { grid-column: auto; } }
+
+  .cq-card {
+    position: relative; min-width: 0;
+    padding: var(--cds-pad-lg);
+    display: flex; flex-direction: column; gap: var(--cds-gap-md);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    backdrop-filter: blur(24px) saturate(160%);
+    border-radius: var(--r);
+    box-shadow: inset 0 0 0 1px var(--rim), inset 0 1px 0 var(--rim), var(--shadow);
+  }
+  .cq-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .cq-card-top > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .cq-card h3 { margin: 0; font-size: calc(var(--cds-font-size-heading) * 1.05); font-weight: var(--cds-font-weight-medium); letter-spacing: -.01em; }
+  .cq-insight { font-size: var(--cds-font-size-caption); color: var(--muted); min-height: 1.2em; }
+  .cq-insight b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .cq-tag { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: var(--cds-font-size-caption); background: var(--glass-2); box-shadow: inset 0 0 0 1px var(--rim); white-space: nowrap; }
+
+  /* header */
+  .cq-head { justify-content: center; padding: var(--cds-pad-xl); }
+  .cq-live { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px 5px 10px; border-radius: 999px; font-size: var(--cds-font-size-caption); background: var(--glass-2); box-shadow: inset 0 0 0 1px var(--rim); }
+  .cq-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lime) 30%, transparent); }
+  .cq-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: calc(var(--cds-font-size-title) * 1.5); line-height: 1.02; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+  .cq-lede { margin: 0; color: color-mix(in srgb, var(--color-fg) 75%, transparent); max-width: 58ch; line-height: 1.55; }
+  .cq-lede b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+
+  /* ring card */
+  .cq-ringcard { align-items: center; justify-content: center; text-align: center; }
+  .cq-ringcard .cq-card-top { align-self: stretch; }
+  .cq-ring { width: 170px; height: 170px; }
+  .cq-ring svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .cq-ring .pct { font-family: var(--font-anthropic-serif); font-size: 38px; }
+  .cq-ring .cap { font-size: 11px; }
+  .cq-ringfoot { font-size: var(--cds-font-size-caption); color: var(--muted); }
+  .cq-ringfoot b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+
+  /* KPI */
+  .cq-kpi { gap: 10px; }
+  .cq-kpi-label { display: flex; align-items: center; gap: 10px; font-size: var(--cds-font-size-caption); color: var(--muted); }
+  .cq-kpi-ico { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--k) 22%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--k) 35%, transparent); }
+  .cq-kpi-ico i { width: 10px; height: 10px; border-radius: 50%; background: var(--k); }
+  .cq-kpi-value { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: calc(var(--cds-font-size-title) * 1.3); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .cq-kpi-note { font-size: var(--cds-font-size-caption); color: var(--muted); }
+
+  /* section titles */
+  .cq-section { display: flex; flex-direction: column; gap: var(--cds-gap-md); }
+  .cq-sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .cq-sec-head h2 { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: calc(var(--cds-font-size-heading) * 1.5); letter-spacing: -.015em; }
+  .cq-sec-head p { margin: 2px 0 0; color: var(--muted); font-size: var(--cds-font-size-caption); max-width: 66ch; }
+
+  .cq-card > [data-draw^="cols-"] { flex: 1 1 auto; display: flex; flex-direction: column; }
+  .cq-card > [data-draw^="cols-"] > .cq-cols { flex: 1 1 auto; }
+  /* vertical pill columns */
+  .cq-cols { display: flex; align-items: stretch; gap: clamp(8px, 2.2vw, 18px); min-height: 230px; }
+  .cq-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .cq-col-val { font-size: var(--cds-font-size-caption); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cq-col-val b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .cq-pill { position: relative; flex: 1 1 auto; width: min(100%, 64px); min-height: 150px; border-radius: 999px; background: var(--pill); box-shadow: inset 0 0 0 1px var(--pill-edge), inset 0 2px 6px color-mix(in srgb, var(--color-fg) 6%, transparent); overflow: hidden; display: flex; align-items: flex-end; }
+  .cq-pill-fill { width: 100%; border-radius: 999px; min-height: 22px; transform-origin: bottom center; background: color-mix(in srgb, var(--v2) 22%, var(--pill)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--v2) 18%, transparent); }
+  .cq-pill-fill.lead { background: linear-gradient(180deg, var(--v1), var(--v2)); box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 45%, transparent), 0 10px 24px -10px var(--v2); }
+  .cq-col-lab { font-size: var(--cds-font-size-caption); text-align: center; line-height: 1.25; overflow-wrap: anywhere; min-height: 2.5em; }
+
+  /* horizontal bars */
+  .cq-bars { display: flex; flex-direction: column; gap: 14px; }
+  .cq-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px var(--cds-gap-sm); align-items: baseline; }
+  .cq-row-label { min-width: 0; overflow-wrap: anywhere; }
+  .cq-row-val { font-size: var(--cds-font-size-caption); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cq-row-val b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .cq-track { grid-column: 1 / -1; height: 12px; border-radius: 999px; background: var(--pill); box-shadow: inset 0 0 0 1px var(--pill-edge); overflow: hidden; }
+  .cq-fill { height: 100%; border-radius: 999px; transform-origin: left center; min-width: 12px; background: color-mix(in srgb, var(--v2) 24%, var(--pill)); }
+  .cq-fill.lead { background: linear-gradient(90deg, var(--v1), var(--v2)); box-shadow: 0 4px 12px -6px var(--v2); }
+
+  /* donut */
+  .cq-donut-wrap { display: flex; flex-direction: column; align-items: center; gap: var(--cds-gap-md); }
+  .cq-donut { width: 190px; height: 190px; }
+  .cq-donut svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .cq-legend { align-self: stretch; display: flex; flex-direction: column; gap: 8px; }
+  .cq-leg { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+  .cq-leg i { width: 12px; height: 12px; border-radius: 4px; }
+  .cq-leg span:last-child { font-size: var(--cds-font-size-caption); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cq-leg span:last-child b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+
+  .cq-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .cq-chips:empty { display: none; }
+  .cq-chip { padding: 4px 12px; border-radius: 999px; font-size: var(--cds-font-size-caption); background: color-mix(in srgb, var(--lime) 30%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lime) 50%, transparent); }
+  .cq-chips-lab { font-size: var(--cds-font-size-caption); color: var(--muted); }
+  .cq-empty { color: var(--muted); font-size: var(--cds-font-size-caption); }
+
+  /* heatmap */
+  .cq-tablewrap { overflow-x: auto; }
+  .cq-x { width: 100%; border-collapse: separate; border-spacing: 6px; font-variant-numeric: tabular-nums; min-width: 440px; }
+  .cq-x th { font-size: var(--cds-font-size-caption); color: var(--muted); font-weight: var(--cds-font-weight-medium); padding: 4px 6px; text-align: center; vertical-align: bottom; }
+  .cq-x th.age { width: 1%; text-align: left; white-space: nowrap; color: var(--color-fg); padding-right: 12px; }
+  .cq-x th.age small { display: block; font-weight: 400; color: var(--muted); }
+  .cq-x td { position: relative; text-align: center; padding: 12px 6px; border-radius: 14px; background: var(--pill); box-shadow: inset 0 0 0 1px var(--pill-edge); }
+  .cq-x td .bg { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(160deg, var(--v1), var(--v2)); }
+  .cq-x td .tx { position: relative; }
+  .cq-x td.hot { color: #fff; }
+  .cq-x td small { opacity: .8; font-size: var(--cds-font-size-caption); }
+  .cq-x td.top { box-shadow: 0 0 0 2px var(--lime), 0 10px 24px -12px var(--v2); font-weight: var(--cds-font-weight-medium); }
+  .cq-x td.zero { color: var(--muted); background: transparent; box-shadow: none; }
+  .cq-low { display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: 999px; font-size: 10px; font-weight: 400; color: var(--color-fg); background: color-mix(in srgb, var(--lime) 35%, transparent); }
+  .cq-scale { display: inline-flex; align-items: center; gap: 8px; font-size: var(--cds-font-size-caption); color: var(--muted); }
+  .cq-scale i { width: 80px; height: 8px; border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--v2) 12%, transparent), var(--v2)); }
+  .cq-xhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .cq-xhead .dash-select { border-radius: 999px; background-color: var(--glass-2); }
+
+  /* table */
+  .cq-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .cq-table th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--muted); font-size: var(--cds-font-size-caption); padding: 6px 10px; border-bottom: 1px solid var(--line); }
+  .cq-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); }
+  .cq-table tbody tr:last-child td { border-bottom: 0; }
+  .cq-table .num { text-align: right; }
+
+  .cq-foot { font-size: var(--cds-font-size-caption); color: var(--muted); margin: 0; text-align: center; }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .cq-card { background: var(--color-panel); } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cq-card { animation: cq-rise .9s cubic-bezier(.2, .8, .2, 1) both; transition: transform .5s cubic-bezier(.2, .8, .2, 1), box-shadow .5s; }
+    .cq-bento > :nth-child(2) { animation-delay: .06s; }
+    .cq-bento > :nth-child(3) { animation-delay: .12s; }
+    .cq-bento > :nth-child(4) { animation-delay: .18s; }
+    @keyframes cq-rise { from { transform: translateY(16px) scale(.98); filter: blur(6px); } to { transform: none; filter: none; } }
+    .cq-card:hover { transform: translateY(-3px); }
+    .cq-live i { animation: cq-pulse 2s ease-out infinite; }
+    @keyframes cq-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lime) 70%, transparent); } 80%, 100% { box-shadow: 0 0 0 9px transparent; } }
+    .cq-anim .cq-pill-fill { animation: cq-up 1.1s cubic-bezier(.2, .9, .25, 1.12) both; animation-delay: calc(var(--i, 0) * 80ms + .2s); }
+    @keyframes cq-up { from { transform: scaleY(.05); } to { transform: none; } }
+    .cq-anim .cq-fill { animation: cq-grow 1.1s cubic-bezier(.2, .9, .25, 1.1) both; animation-delay: calc(var(--i, 0) * 70ms + .2s); }
+    @keyframes cq-grow { from { transform: scaleX(.04); } to { transform: none; } }
+    .cq-anim td .bg { animation: cq-pop .8s cubic-bezier(.2, .9, .25, 1.2) both; animation-delay: calc(var(--i, 0) * 25ms + .1s); }
+    @keyframes cq-pop { from { transform: scale(.5); opacity: 0; } }
+  }
+</style>
+
+<div class="cq">
+  <div class="cq-ambient" aria-hidden="true"></div>
+
+  <div class="cq-bento" id="top">
+    <header class="cq-card cq-head span-2" id="summary">
+      <span class="cq-live"><i></i>Живые данные · последний ответ <span data-draw="last-at" data-source="summary" data-field="last_at" data-row="0">—</span></span>
+      <h1>Квиз кофейни — результаты</h1>
+      <p class="cq-lede" data-read lang="ru">Лидирует название <b data-draw="top-name" class="dash-skeleton" data-source="summary" data-field="top_name" data-row="0">—</b>: за него <span data-draw="top-name-n" class="dash-skeleton" data-source="summary" data-field="top_name_n" data-row="0">—</span> из <span data-draw="total-inline" class="dash-skeleton" data-source="summary" data-field="total" data-row="0">—</span> ответов. Чаще всего выбирают палитру «<b data-draw="top-palette" class="dash-skeleton" data-source="summary" data-field="top_palette" data-row="0">—</b>».</p>
+    </header>
+    <div class="cq-card cq-ringcard" id="conversion">
+      <div class="cq-card-top"><div><h3>Конверсия в лид</h3><span class="cq-insight">из прошедших квиз</span></div></div>
+      <div class="cq-ring" data-draw="ring" data-source="summary" role="img" aria-label="Доля прошедших квиз, оставивших номер"></div>
+      <span class="cq-ringfoot"><b data-draw="ring-leads" data-source="summary" data-field="leads" data-row="0">—</b> из <span data-draw="ring-total" data-source="summary" data-field="total" data-row="0">—</span> оставили номер</span>
+    </div>
+  </div>
+
+  <div class="cq-bento four" id="kpis" aria-label="Главные цифры">
+    <div class="cq-card cq-kpi" id="kpi-total" style="--k: var(--v2)">
+      <span class="cq-kpi-label"><span class="cq-kpi-ico"><i></i></span>Прошли квиз</span>
+      <span class="cq-kpi-value" data-draw="kpi-total" data-source="summary" data-field="total" data-row="0" data-fetchpriority="high">—</span>
+      <span class="cq-kpi-note">ответов за всё время</span>
+    </div>
+    <div class="cq-card cq-kpi" id="kpi-leads" style="--k: var(--lime)">
+      <span class="cq-kpi-label"><span class="cq-kpi-ico"><i></i></span>Оставили номер</span>
+      <span class="cq-kpi-value" data-draw="kpi-leads" data-source="summary" data-field="leads" data-row="0">—</span>
+      <span class="cq-kpi-note">статус «лид»</span>
+    </div>
+    <div class="cq-card cq-kpi" id="kpi-time" style="--k: var(--sky)">
+      <span class="cq-kpi-label"><span class="cq-kpi-ico"><i></i></span>Время прохождения</span>
+      <span class="cq-kpi-value"><span data-draw="kpi-time" data-source="summary" data-field="median_sec" data-row="0">—</span> с</span>
+      <span class="cq-kpi-note">медиана</span>
+    </div>
+    <div class="cq-card cq-kpi" id="kpi-top" style="--k: var(--peach)">
+      <span class="cq-kpi-label"><span class="cq-kpi-ico"><i></i></span>Голосов за лидера</span>
+      <span class="cq-kpi-value" data-draw="kpi-top" data-source="summary" data-field="top_name_n" data-row="0">—</span>
+      <span class="cq-kpi-note">за <span data-draw="kpi-top-name" data-source="summary" data-field="top_name" data-row="0">—</span></span>
+    </div>
+  </div>
+
+  <section class="cq-section" id="brand">
+    <div class="cq-sec-head"><div><h2>Бренд</h2><p>Что выбрали для новой кофейни. Порядок названий каждому показывается случайный.</p></div></div>
+    <div class="cq-bento">
+      <div class="cq-card span-2" id="chart-name">
+        <div class="cq-card-top"><div><h3>Название</h3><span class="cq-insight" data-draw="ins-name" data-source="dist"></span></div><span class="cq-tag">голоса</span></div>
+        <div data-draw="cols-name" data-source="dist" role="img" aria-label="Голоса за название кофейни"></div>
+        <div class="cq-chips" data-draw="custom-names" data-source="real" data-field="custom_name"></div>
+      </div>
+      <div class="cq-card" id="chart-palette">
+        <div class="cq-card-top"><div><h3>Палитра</h3><span class="cq-insight" data-draw="ins-palette" data-source="dist"></span></div></div>
+        <div class="cq-donut-wrap" data-draw="donut-palette" data-source="dist" role="img" aria-label="Выбор палитры"></div>
+        <div class="cq-chips" data-draw="custom-colors" data-source="real" data-field="custom_colors"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cq-section" id="audience">
+    <div class="cq-sec-head"><div><h2>Кто проходит</h2><p>Возраст, занятость и язык квиза.</p></div></div>
+    <div class="cq-bento">
+      <div class="cq-card" id="chart-age">
+        <div class="cq-card-top"><div><h3>Возраст</h3><span class="cq-insight" data-draw="ins-age" data-source="dist"></span></div></div>
+        <div data-draw="cols-age" data-source="dist" role="img" aria-label="Возраст"></div>
+      </div>
+      <div class="cq-card" id="chart-occupation">
+        <div class="cq-card-top"><div><h3>Занятость</h3><span class="cq-insight" data-draw="ins-occupation" data-source="dist"></span></div></div>
+        <div class="cq-bars" data-draw="bars-occupation" data-source="dist" role="img" aria-label="Занятость"></div>
+      </div>
+      <div class="cq-card" id="chart-lang">
+        <div class="cq-card-top"><div><h3>Язык квиза</h3><span class="cq-insight" data-draw="ins-lang" data-source="dist"></span></div></div>
+        <div class="cq-bars" data-draw="bars-lang" data-source="dist" role="img" aria-label="Язык квиза"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cq-section" id="habits">
+    <div class="cq-sec-head"><div><h2>Кофейные привычки</h2><p>Как часто пьют кофе, сколько готовы платить, где берут и как удобнее заказывать.</p></div></div>
+    <div class="cq-bento">
+      <div class="cq-card" id="chart-frequency">
+        <div class="cq-card-top"><div><h3>Как часто пьют кофе</h3><span class="cq-insight" data-draw="ins-frequency" data-source="dist"></span></div></div>
+        <div data-draw="cols-frequency" data-source="dist" role="img" aria-label="Частота кофе"></div>
+      </div>
+      <div class="cq-card" id="chart-price">
+        <div class="cq-card-top"><div><h3>Цена капучино</h3><span class="cq-insight" data-draw="ins-price" data-source="dist"></span></div></div>
+        <div data-draw="cols-price" data-source="dist" role="img" aria-label="Цена капучино"></div>
+      </div>
+      <div class="cq-card" id="chart-order">
+        <div class="cq-card-top"><div><h3>Как заказывать</h3><span class="cq-insight" data-draw="ins-order" data-source="dist"></span></div></div>
+        <div class="cq-bars" data-draw="bars-order" data-source="dist" role="img" aria-label="Способ заказа"></div>
+      </div>
+      <div class="cq-card span-all" id="chart-where">
+        <div class="cq-card-top"><div><h3>Где берут кофе сейчас</h3><span class="cq-insight" data-draw="ins-where" data-source="dist"></span></div><span class="cq-tag">конкуренты</span></div>
+        <div data-draw="cols-where" data-source="dist" role="img" aria-label="Где берут кофе"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cq-section" id="by-age">
+    <div class="cq-sec-head">
+      <div><h2>Выбор по возрасту</h2><p>Сколько человек каждого возраста выбрали вариант и какая это доля внутри группы. Лаймовой рамкой обведён самый частый выбор.</p></div>
+      <select class="dash-select" id="age-q" aria-label="Вопрос">
+        <option value="name">Название</option>
+        <option value="palette">Палитра</option>
+        <option value="price">Цена капучино</option>
+        <option value="frequency">Как часто пьют кофе</option>
+        <option value="order">Как заказывать</option>
+        <option value="where">Где берут кофе</option>
+        <option value="occupation">Занятость</option>
+      </select>
+    </div>
+    <div class="cq-card">
+      <span class="cq-scale"><span>реже</span><i></i><span>чаще внутри группы</span></span>
+      <div class="cq-tablewrap" data-draw="age-cross" data-source="by_age" role="img" aria-label="Ответы в разбивке по возрасту"></div>
+    </div>
+  </section>
+
+  <section class="cq-section" id="ads">
+    <div class="cq-sec-head"><div><h2>Объявления</h2><p>Ответы и лиды по объявлению из метки utm_content.</p></div></div>
+    <div class="cq-card">
+      <div class="cq-tablewrap">
+        <table class="cq-table" data-source="by_ad" data-row-key="ad">
+          <thead><tr>
+            <th data-field="ad">Объявление</th>
+            <th class="num" data-field="responses">Ответы</th>
+            <th class="num" data-field="leads">Лиды</th>
+            <th class="num" data-field="lead_share_pct">Доля лидов, %</th>
+          </tr></thead>
+          <tbody data-draw="ads"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <p class="cq-foot" data-read lang="ru">Тестовые строки с ID, начинающимся на TEST, не учитываются. Телефоны и имена из таблицы на этой странице не показываются.</p>
+</div>
+
+<script>
+  dash.loader('responses', {
+    description: 'Читает лист «Ответы» из текста таблицы и делает строки. Имя и телефон дальше не передаются.',
+    fn: ({answer}) => {
+      const text = typeof answer === 'string' ? answer : (answer && answer.fileContent) || '';
+      if (!text) throw new Error('Google Drive вернул пустой ответ');
+      const start = text.indexOf('### Sheet Name: Ответы');
+      if (start < 0) throw new Error('В таблице не найден лист «Ответы»');
+      const endIdx = text.indexOf('### Table Columns', start);
+      const part = text.slice(start, endIdx < 0 ? undefined : endIdx);
+      const split = (l) => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim().replace(/\\(.)/g, '$1'));
+      const lines = part.split('\n').filter((l) => l.trim().startsWith('|')).map(split);
+      const hi = lines.findIndex((c) => c[0] === 'Дата');
+      if (hi < 0) throw new Error('Не найдена строка заголовков листа «Ответы»');
+      const MAP = {'Дата': 'date', 'ID': 'id', 'Статус': 'status', 'Язык': 'lang', 'Возраст': 'age', 'Занятость': 'occupation',
+        'Частота кофе': 'frequency', 'Где берёт': 'where', 'Цена капучино': 'price', 'Как заказывать': 'order',
+        'Название': 'name', 'Своё название': 'custom_name', 'Палитра': 'palette', 'Свои цвета': 'custom_colors',
+        'Время, сек': 'seconds', 'Устройство': 'device', 'utm_content': 'ad'};
+      const head = lines[hi];
+      const idx = {};
+      head.forEach((h, i) => { if (MAP[h]) idx[MAP[h]] = i; });
+      const columns = Object.values(MAP);
+      const rows = lines.slice(hi + 1).filter((c) => c.some((v) => v !== '')).map((c) => {
+        const r = {};
+        for (const k of columns) {
+          const v = idx[k] === undefined ? '' : (c[idx[k]] ?? '');
+          r[k] = k === 'seconds' ? (v === '' ? null : Number(v)) : (v === '' ? null : v);
+        }
+        return r;
+      });
+      return {columns, rows};
+    }
+  });
+
+  dash.calc('real', {
+    title: 'Ответы без тестовых',
+    description: 'Все ответы, кроме строк с ID на TEST.',
+    inputs: ['responses'],
+    fn: (responses) => responses.filter((r) => !String(r.id || '').startsWith('TEST'))
+  });
+
+  dash.calc('summary', {
+    title: 'Главные цифры',
+    description: 'Число ответов и лидов, доля лидов, медиана времени, лидеры по названию и палитре и время последнего ответа.',
+    inputs: ['real'],
+    fn: (real) => {
+      const total = real.length;
+      const leads = real.filter((r) => r.status === 'лид').length;
+      const secs = real.map((r) => Number(r.seconds)).filter((v) => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
+      const mid = secs.length ? (secs.length % 2 ? secs[(secs.length - 1) / 2] : (secs[secs.length / 2 - 1] + secs[secs.length / 2]) / 2) : null;
+      const top = (key) => {
+        const m = new Map();
+        for (const r of real) { const v = (r[key] || '').trim(); if (v) m.set(v, (m.get(v) || 0) + 1); }
+        let best = null, n = 0;
+        for (const [k, c] of m) if (c > n) { best = k; n = c; }
+        return [best, n];
+      };
+      const [topName, topNameN] = top('name');
+      const [topPalette, topPaletteN] = top('palette');
+      const parse = (t) => {
+        const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}):(\d{2})/.exec(String(t || ''));
+        return m ? {k: m[3] + m[2].padStart(2, '0') + m[1].padStart(2, '0') + m[4].padStart(2, '0') + m[5], txt: m[1].padStart(2, '0') + '.' + m[2].padStart(2, '0') + ', ' + m[4].padStart(2, '0') + ':' + m[5]} : null;
+      };
+      let last = null;
+      for (const r of real) { const d = parse(r.date); if (d && (!last || d.k > last.k)) last = d; }
+      return [{
+        total, leads,
+        lead_share_pct: total ? Math.round(leads / total * 100) : 0,
+        median_sec: mid === null ? null : Math.round(mid),
+        top_name: topName, top_name_n: topNameN,
+        top_palette: topPalette, top_palette_n: topPaletteN,
+        last_at: last ? last.txt : null
+      }];
+    }
+  });
+
+  dash.calc('dist', {
+    title: 'Ответы по вопросам',
+    description: 'Сколько человек выбрали каждый вариант в каждом вопросе и какая это доля от ответивших.',
+    inputs: ['real'],
+    fn: (real) => {
+      const QS = ['name', 'palette', 'age', 'occupation', 'lang', 'frequency', 'price', 'where', 'order'];
+      const ORDER = {
+        age: ['до 18', '18–22', '23–30', '30+'],
+        frequency: ['Каждый день', '2–4 раза в неделю', 'Раз в неделю', 'Реже'],
+        price: ['до 20 000 сум', '20 000–30 000 сум', '30 000–40 000 сум']
+      };
+      const out = [];
+      for (const q of QS) {
+        const counts = new Map();
+        let answered = 0;
+        for (const r of real) {
+          const v = (r[q] || '').trim();
+          if (!v) continue;
+          answered++;
+          counts.set(v, (counts.get(v) || 0) + 1);
+        }
+        const ord = ORDER[q];
+        const pos = (a) => { const i = ord ? ord.indexOf(a) : -1; return i < 0 ? 99 : i; };
+        const keys = [...counts.keys()].sort((a, b) => (pos(a) - pos(b)) || (counts.get(b) - counts.get(a)) || a.localeCompare(b));
+        keys.forEach((k) => out.push({
+          question: q, answer: k, n: counts.get(k),
+          share_pct: answered ? Math.round(counts.get(k) / answered * 100) : 0
+        }));
+      }
+      return out;
+    }
+  });
+
+  dash.calc('by_age', {
+    title: 'Ответы по возрасту',
+    description: 'Для каждого вопроса: сколько человек каждой возрастной группы выбрали вариант и доля внутри группы.',
+    inputs: ['real'],
+    fn: (real) => {
+      const QS = ['name', 'palette', 'price', 'frequency', 'order', 'where', 'occupation'];
+      const out = [];
+      for (const q of QS) {
+        const groups = new Map();
+        for (const r of real) {
+          const age = (r.age || '').trim();
+          const v = (r[q] || '').trim();
+          if (!age || !v) continue;
+          const g = groups.get(age) || new Map();
+          g.set(v, (g.get(v) || 0) + 1);
+          groups.set(age, g);
+        }
+        for (const [age, g] of groups) {
+          let size = 0;
+          for (const c of g.values()) size += c;
+          for (const [answer, n] of g) {
+            out.push({question: q, age, answer, n, group_size: size, share_pct: Math.round(n / size * 100)});
+          }
+        }
+      }
+      return out;
+    }
+  });
+
+  dash.calc('by_ad', {
+    title: 'Лиды по объявлениям',
+    description: 'Ответы и лиды по метке utm_content; без метки — переходы не из рекламы.',
+    inputs: ['real'],
+    fn: (real) => {
+      const m = new Map();
+      for (const r of real) {
+        const ad = (r.ad || '').trim() || 'без метки';
+        const a = m.get(ad) || {ad, responses: 0, leads: 0};
+        a.responses++;
+        if (r.status === 'лид') a.leads++;
+        m.set(ad, a);
+      }
+      return [...m.values()]
+        .map((a) => ({...a, lead_share_pct: a.responses ? Math.round(a.leads / a.responses * 100) : 0}))
+        .sort((x, y) => y.responses - x.responses);
+    }
+  });
+
+  /* ---------- helpers ---------- */
+  const ANIMATED = new Set();
+  const MOTION = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+  const enc = (s) => encodeURIComponent(String(s));
+  const LABEL = {lang: {uz: 'O‘zbekcha', ru: 'Русский'}};
+  const showLabel = (q, a) => (LABEL[q] && LABEL[q][a]) || a;
+  const PALETTE_COLOR = {'Оранжевая': '#FF8A3D', 'Бордовая': '#B3264F', 'Зелёная': '#2DB37A', 'Свои цвета': '#A38BFF'};
+  const num = (v) => d3.format(',')(v).replace(/,/g, ' ');
+  const NS = 'http://www.w3.org/2000/svg';
+  const svgEl = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+
+  function settle(el, d) {
+    if (d.status !== 'loading') el.classList.remove('dash-skeleton');
+    return d.status === 'ok' && Array.isArray(d.data) && d.data.length ? d.data : null;
+  }
+  function message(el, d, empty) {
+    const p = document.createElement('p');
+    p.className = 'cq-empty';
+    p.textContent = d.status === 'error' ? 'Не удалось загрузить ответы.' : (empty || '—');
+    el.replaceChildren(p);
+  }
+  function animOnce(el, key) {
+    el.classList.toggle('cq-anim', !ANIMATED.has(key));
+    ANIMATED.add(key);
+  }
+  function valueMarks(source, where, n, pct) {
+    const span = document.createElement('span');
+    const nb = document.createElement('b');
+    nb.textContent = String(n);
+    nb.dataset.source = source; nb.dataset.field = 'n'; nb.dataset.where = where;
+    const pc = document.createElement('span');
+    pc.textContent = String(pct);
+    pc.dataset.source = source; pc.dataset.field = 'share_pct'; pc.dataset.where = where;
+    span.append(nb, document.createTextNode(' · '), pc, document.createTextNode('%'));
+    return span;
+  }
+
+  /* ---------- summary words and numbers ---------- */
+  function putSummary(name, field, fmt) {
+    dash.draw(name, (el) => {
+      const rows = settle(el, dash.data('summary'));
+      const v = rows ? rows[0][field] : null;
+      el.textContent = v === null || v === undefined ? '—' : (fmt ? fmt(v) : String(v));
+    });
+  }
+  putSummary('top-name', 'top_name');
+  putSummary('top-name-n', 'top_name_n', num);
+  putSummary('total-inline', 'total', num);
+  putSummary('top-palette', 'top_palette', (v) => String(v).toLowerCase());
+  putSummary('last-at', 'last_at');
+  putSummary('ring-leads', 'leads', num);
+  putSummary('ring-total', 'total', num);
+  putSummary('kpi-total', 'total', num);
+  putSummary('kpi-leads', 'leads', num);
+  putSummary('kpi-time', 'median_sec', num);
+  putSummary('kpi-top', 'top_name_n', num);
+  putSummary('kpi-top-name', 'top_name');
+
+  /* ---------- conversion ring ---------- */
+  dash.draw('ring', (el) => {
+    const d = dash.data('summary');
+    if (d.status === 'loading') return;
+    const row = d.status === 'ok' && d.data && d.data[0] ? d.data[0] : null;
+    const pct = row ? row.lead_share_pct : null;
+    const svg = svgEl('svg', {viewBox: '0 0 170 170'});
+    const defs = svgEl('defs', {});
+    const lg = svgEl('linearGradient', {id: 'cq-ring-g', x1: '0', y1: '0', x2: '1', y2: '1'});
+    [['0', '#C6F24E'], ['0.5', '#A38BFF'], ['1', '#6B4DFF']].forEach(([o, c]) => lg.append(svgEl('stop', {offset: o, 'stop-color': c})));
+    defs.append(lg);
+    const R = 68, C = 2 * Math.PI * R;
+    const bg = svgEl('circle', {cx: '85', cy: '85', r: String(R), fill: 'none', 'stroke-width': '16'});
+    bg.style.stroke = 'var(--pill)';
+    const arc = svgEl('circle', {cx: '85', cy: '85', r: String(R), fill: 'none', stroke: 'url(#cq-ring-g)', 'stroke-width': '16', 'stroke-linecap': 'round', transform: 'rotate(-90 85 85)'});
+    const len = pct === null ? 0 : C * pct / 100;
+    arc.setAttribute('stroke-dasharray', len + ' ' + C);
+    arc.style.filter = 'drop-shadow(0 6px 12px rgba(107, 77, 255, .35))';
+    if (MOTION && pct !== null && !ANIMATED.has('ring')) {
+      arc.animate([{strokeDasharray: '0 ' + C}, {strokeDasharray: len + ' ' + C}], {duration: 1400, easing: 'cubic-bezier(.2,.8,.2,1)', delay: 250, fill: 'backwards'});
+      ANIMATED.add('ring');
+    }
+    const t = svgEl('text', {x: '85', y: '92', 'text-anchor': 'middle', class: 'pct'});
+    t.style.fill = 'var(--color-fg)';
+    const tn = svgEl('tspan', {'data-source': 'summary', 'data-field': 'lead_share_pct', 'data-row': '0'});
+    tn.textContent = pct === null ? '—' : String(pct);
+    const tp = svgEl('tspan', {});
+    tp.textContent = pct === null ? '' : '%';
+    t.append(tn, tp);
+    svg.append(defs, bg, arc, t);
+    el.replaceChildren(svg);
+  });
+
+  /* ---------- card insights (words only) ---------- */
+  ['name', 'palette', 'age', 'occupation', 'lang', 'frequency', 'price', 'where', 'order'].forEach((q) => dash.draw('ins-' + q, (el) => {
+    const d = dash.data('dist');
+    if (d.status !== 'ok') { el.textContent = ''; return; }
+    const rows = (d.data || []).filter((r) => r.question === q).slice().sort((a, b) => b.n - a.n);
+    if (!rows.length) { el.textContent = ''; return; }
+    const a = rows[0], b = rows[1];
+    const b1 = document.createElement('b');
+    b1.textContent = showLabel(q, a.answer);
+    if (b && b.n === a.n) {
+      const b2 = document.createElement('b');
+      b2.textContent = showLabel(q, b.answer);
+      el.replaceChildren(document.createTextNode('Вровень: '), b1, document.createTextNode(' и '), b2);
+    } else {
+      const gap = b ? a.share_pct - b.share_pct : 100;
+      const tone = gap >= 25 ? ', с большим отрывом' : gap >= 10 ? ', уверенно' : ', с небольшим перевесом';
+      el.replaceChildren(document.createTextNode('Чаще всего: '), b1, document.createTextNode(tone));
+    }
+  }));
+
+  /* ---------- vertical pill columns ---------- */
+  function drawCols(el, q) {
+    const d = dash.data('dist');
+    if (d.status === 'loading') return;
+    if (d.status !== 'ok') { message(el, d); return; }
+    const rows = (d.data || []).filter((r) => r.question === q);
+    if (!rows.length) { message(el, d, 'Пока нет ответов.'); return; }
+    const max = d3.max(rows, (r) => r.n) || 1;
+    const wrap = document.createElement('div');
+    wrap.className = 'cq-cols';
+    rows.forEach((r, i) => {
+      const col = document.createElement('div');
+      col.className = 'cq-col';
+      col.style.setProperty('--i', String(i));
+      const val = document.createElement('span');
+      val.className = 'cq-col-val';
+      val.append(valueMarks('dist', 'question=' + enc(q) + '&answer=' + enc(r.answer), r.n, r.share_pct));
+      const pill = document.createElement('div');
+      pill.className = 'cq-pill';
+      const fill = document.createElement('div');
+      fill.className = 'cq-pill-fill' + (r.n === max ? ' lead' : '');
+      fill.style.height = (r.n / max * 100) + '%';
+      pill.append(fill);
+      const lab = document.createElement('span');
+      lab.className = 'cq-col-lab';
+      lab.textContent = showLabel(q, r.answer);
+      col.append(val, pill, lab);
+      wrap.append(col);
+    });
+    animOnce(el, 'cols-' + q);
+    el.replaceChildren(wrap);
+  }
+  ['name', 'age', 'frequency', 'price', 'where'].forEach((q) => dash.draw('cols-' + q, (el) => drawCols(el, q)));
+
+  /* ---------- horizontal bars ---------- */
+  function drawBars(el, q) {
+    const d = dash.data('dist');
+    if (d.status === 'loading') return;
+    if (d.status !== 'ok') { message(el, d); return; }
+    const rows = (d.data || []).filter((r) => r.question === q);
+    if (!rows.length) { message(el, d, 'Пока нет ответов.'); return; }
+    const max = d3.max(rows, (r) => r.n) || 1;
+    const items = rows.map((r, i) => {
+      const row = document.createElement('div');
+      row.className = 'cq-row';
+      row.style.setProperty('--i', String(i));
+      const label = document.createElement('span');
+      label.className = 'cq-row-label';
+      label.textContent = showLabel(q, r.answer);
+      const val = document.createElement('span');
+      val.className = 'cq-row-val';
+      val.append(valueMarks('dist', 'question=' + enc(q) + '&answer=' + enc(r.answer), r.n, r.share_pct));
+      const track = document.createElement('div');
+      track.className = 'cq-track';
+      const fill = document.createElement('div');
+      fill.className = 'cq-fill' + (r.n === max ? ' lead' : '');
+      fill.style.width = (r.n / max * 100) + '%';
+      track.append(fill);
+      row.append(label, val, track);
+      return row;
+    });
+    animOnce(el, 'bars-' + q);
+    el.replaceChildren(...items);
+  }
+  ['occupation', 'lang', 'order'].forEach((q) => dash.draw('bars-' + q, (el) => drawBars(el, q)));
+
+  /* ---------- palette donut ---------- */
+  dash.draw('donut-palette', (el) => {
+    const d = dash.data('dist');
+    if (d.status === 'loading') return;
+    if (d.status !== 'ok') { message(el, d); return; }
+    const rows = (d.data || []).filter((r) => r.question === 'palette').slice().sort((a, b) => b.n - a.n);
+    if (!rows.length) { message(el, d, 'Пока нет ответов.'); return; }
+    const pie = d3.pie().sort(null).value((r) => r.n).padAngle(0.035);
+    const arc = d3.arc().innerRadius(62).outerRadius(92).cornerRadius(8);
+    const svg = svgEl('svg', {viewBox: '-100 -100 200 200'});
+    const arcs = pie(rows);
+    arcs.forEach((a, i) => {
+      const path = svgEl('path', {d: arc(a)});
+      path.style.fill = PALETTE_COLOR[a.data.answer] || '#A38BFF';
+      path.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,.15))';
+      if (MOTION && !ANIMATED.has('donut')) {
+        path.animate([{opacity: 0, transform: 'scale(.85)'}, {opacity: 1, transform: 'scale(1)'}], {duration: 700, delay: 150 + i * 120, easing: 'cubic-bezier(.2,.9,.25,1.15)', fill: 'backwards'});
+      }
+      svg.append(path);
+    });
+    ANIMATED.add('donut');
+    const lead = rows[0];
+    const t1 = svgEl('text', {x: '0', y: '-2', 'text-anchor': 'middle'});
+    t1.style.fill = 'var(--color-fg)'; t1.style.fontFamily = 'var(--font-anthropic-serif)'; t1.style.fontSize = '28px';
+    const t1n = svgEl('tspan', {'data-source': 'dist', 'data-field': 'share_pct', 'data-where': 'question=palette&answer=' + enc(lead.answer)});
+    t1n.textContent = String(lead.share_pct);
+    const t1p = svgEl('tspan', {}); t1p.textContent = '%';
+    t1.append(t1n, t1p);
+    const t2 = svgEl('text', {x: '0', y: '18', 'text-anchor': 'middle'});
+    t2.style.fill = 'var(--muted)'; t2.style.fontSize = '11px';
+    t2.textContent = String(lead.answer).toLowerCase();
+    svg.append(t1, t2);
+    const box = document.createElement('div');
+    box.className = 'cq-donut';
+    box.append(svg);
+    const legend = document.createElement('div');
+    legend.className = 'cq-legend';
+    rows.forEach((r) => {
+      const row = document.createElement('div');
+      row.className = 'cq-leg';
+      const sw = document.createElement('i');
+      sw.style.background = PALETTE_COLOR[r.answer] || '#A38BFF';
+      const lab = document.createElement('span');
+      lab.textContent = r.answer;
+      const val = document.createElement('span');
+      val.append(valueMarks('dist', 'question=palette&answer=' + enc(r.answer), r.n, r.share_pct));
+      row.append(sw, lab, val);
+      legend.append(row);
+    });
+    el.replaceChildren(box, legend);
+  });
+
+  /* ---------- custom answers as chips ---------- */
+  function drawChips(el, field, prefix) {
+    const d = dash.data('real');
+    if (d.status !== 'ok') { el.replaceChildren(); return; }
+    const vals = [...new Set((d.data || []).map((r) => (r[field] || '').trim()).filter(Boolean))];
+    if (!vals.length) { el.replaceChildren(); return; }
+    const lab = document.createElement('span');
+    lab.className = 'cq-chips-lab';
+    lab.textContent = prefix;
+    el.replaceChildren(lab, ...vals.map((v) => { const c = document.createElement('span'); c.className = 'cq-chip'; c.textContent = v; return c; }));
+  }
+  dash.draw('custom-names', (el) => drawChips(el, 'custom_name', 'Свои варианты:'));
+  dash.draw('custom-colors', (el) => drawChips(el, 'custom_colors', 'Свои цвета:'));
+
+  /* ---------- age heatmap ---------- */
+  const AGE_ORDER = ['до 18', '18–22', '23–30', '30+'];
+  const ANSWER_ORDER = {
+    frequency: ['Каждый день', '2–4 раза в неделю', 'Раз в неделю', 'Реже'],
+    price: ['до 20 000 сум', '20 000–30 000 сум', '30 000–40 000 сум']
+  };
+  {
+    const sel = document.getElementById('age-q');
+    if (sel) sel.addEventListener('change', () => dash.draw('age-cross'));
+  }
+  dash.draw('age-cross', (el) => {
+    const d = dash.data('by_age');
+    const sel = document.getElementById('age-q');
+    const q = sel ? sel.value : 'name';
+    if (d.status === 'loading') return;
+    if (d.status !== 'ok') { message(el, d); return; }
+    const rows = (d.data || []).filter((r) => r.question === q);
+    if (!rows.length) { message(el, d, 'Пока нет ответов.'); return; }
+    const total = new Map();
+    rows.forEach((r) => total.set(r.answer, (total.get(r.answer) || 0) + r.n));
+    const ord = ANSWER_ORDER[q];
+    const pos = (a) => { const i = ord ? ord.indexOf(a) : -1; return i < 0 ? 99 : i; };
+    const answers = [...total.keys()].sort((a, b) => (pos(a) - pos(b)) || (total.get(b) - total.get(a)) || a.localeCompare(b));
+    const ages = [...new Set(rows.map((r) => r.age))].sort((a, b) => {
+      const ia = AGE_ORDER.indexOf(a), ib = AGE_ORDER.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
+    });
+    let cellIdx = 0;
+    const table = document.createElement('table');
+    table.className = 'cq-x';
+    const thead = document.createElement('thead');
+    const hr = document.createElement('tr');
+    const corner = document.createElement('th');
+    corner.className = 'age';
+    corner.textContent = 'Возраст';
+    hr.append(corner);
+    answers.forEach((a) => { const th = document.createElement('th'); th.textContent = showLabel(q, a); hr.append(th); });
+    thead.append(hr);
+    const tbody = document.createElement('tbody');
+    ages.forEach((age) => {
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.className = 'age';
+      const ageRows = rows.filter((r) => r.age === age);
+      const size = ageRows.length ? ageRows[0].group_size : 0;
+      th.append(document.createTextNode(age));
+      const sm = document.createElement('small');
+      sm.textContent = size + ' чел.';
+      th.append(sm);
+      if (size < 5) { const lo = document.createElement('span'); lo.className = 'cq-low'; lo.textContent = 'мало данных'; th.append(lo); }
+      tr.append(th);
+      const maxN = d3.max(ageRows, (r) => r.n) || 0;
+      answers.forEach((a) => {
+        const td = document.createElement('td');
+        td.style.setProperty('--i', String(cellIdx++));
+        const r = ageRows.find((x) => x.answer === a);
+        if (!r) { td.className = 'zero'; td.textContent = '·'; tr.append(td); return; }
+        if (r.n === maxN) td.classList.add('top');
+        if (r.share_pct >= 45) td.classList.add('hot');
+        const bg = document.createElement('span');
+        bg.className = 'bg';
+        bg.style.opacity = String(0.12 + 0.88 * r.share_pct / 100);
+        const tx = document.createElement('span');
+        tx.className = 'tx';
+        const where = 'question=' + enc(q) + '&age=' + enc(age) + '&answer=' + enc(a);
+        const nb = document.createElement('span');
+        nb.textContent = String(r.n);
+        nb.dataset.source = 'by_age'; nb.dataset.field = 'n'; nb.dataset.where = where;
+        const pc = document.createElement('small');
+        const pv = document.createElement('span');
+        pv.textContent = String(r.share_pct);
+        pv.dataset.source = 'by_age'; pv.dataset.field = 'share_pct'; pv.dataset.where = where;
+        pc.append(document.createTextNode(' · '), pv, document.createTextNode('%'));
+        tx.append(nb, pc);
+        td.append(bg, tx);
+        tr.append(td);
+      });
+      tbody.append(tr);
+    });
+    table.append(thead, tbody);
+    animOnce(el, 'x-' + q);
+    el.replaceChildren(table);
+  });
+
+  /* ---------- ads table ---------- */
+  dash.draw('ads', (tb) => {
+    const d = dash.data('by_ad');
+    if (d.status !== 'ok') {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'cq-empty';
+      td.textContent = d.status === 'error' ? 'Не удалось загрузить ответы.' : (d.status === 'loading' ? 'Загрузка…' : '—');
+      tr.append(td);
+      tb.replaceChildren(tr);
+      return;
+    }
+    tb.replaceChildren(...(d.data || []).map((r) => {
+      const tr = document.createElement('tr');
+      [r.ad, r.responses, r.leads, r.lead_share_pct].forEach((v, i) => {
+        const td = document.createElement('td');
+        if (i) td.className = 'num';
+        td.textContent = String(v);
+        tr.append(td);
+      });
+      return tr;
+    }));
+  });
+</script>
+
+</div>
+</body>
+</html>
